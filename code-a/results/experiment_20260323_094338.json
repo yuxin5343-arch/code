@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-03-23T09:43:38.130722+00:00",
+  "with_defense": {
+    "tasks": 2,
+    "success": 2,
+    "block_rate": 1.0,
+    "avg_latency_ms": 53,
+    "domain_stats": {
+      "office": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 31,
+        "success_rate": 1.0
+      },
+      "core": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 76,
+        "success_rate": 1.0
+      }
+    },
+    "objective_stats": {
+      "block_ip": {
+        "tasks": 2,
+        "success": 2,
+        "success_rate": 1.0
+      }
+    },
+    "decision_elapsed_ms": 81,
+    "flat_results": [
+      {
+        "task_id": "00919123-e02d-4bc1-b630-de58b3ed41fa",
+        "executor": "executor-office",
+        "domain": "office",
+        "objective": "block_ip",
+        "success": true,
+        "latency_ms": 31,
+        "error": null
+      },
+      {
+        "task_id": "23108722-af52-4c9e-bd7a-837cea5ba180",
+        "executor": "executor-core",
+        "domain": "core",
+        "objective": "block_ip",
+        "success": true,
+        "latency_ms": 76,
+        "error": null
+      }
+    ],
+    "decision": {
+      "strategy": "global_isolation_and_block",
+      "priority": 1,
+      "playbook": [
+        "block_ip",
+        "tighten_acl",
+        "enable_ids_strict"
+      ],
+      "pattern": "lateral_movement"
+    }
+  },
+  "without_defense": {
+    "tasks": 0,
+    "success": 0,
+    "block_rate": 0,
+    "avg_latency_ms": 0,
+    "decision_elapsed_ms": 0,
+    "domain_stats": {},
+    "objective_stats": {},
+    "flat_results": []
+  },
+  "delta": {
+    "block_rate_delta": 1.0,
+    "latency_delta_ms": 53
+  }
+}

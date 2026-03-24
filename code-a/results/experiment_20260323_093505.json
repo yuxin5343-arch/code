@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-03-23T09:35:05.224824+00:00",
+  "with_defense": {
+    "tasks": 2,
+    "success": 0,
+    "block_rate": 0.0,
+    "avg_latency_ms": 0,
+    "domain_stats": {
+      "office": {
+        "tasks": 1,
+        "success": 0,
+        "avg_latency_ms": 0,
+        "success_rate": 0.0
+      },
+      "core": {
+        "tasks": 1,
+        "success": 0,
+        "avg_latency_ms": 0,
+        "success_rate": 0.0
+      }
+    },
+    "objective_stats": {
+      "block_ip": {
+        "tasks": 2,
+        "success": 0,
+        "success_rate": 0.0
+      }
+    },
+    "decision_elapsed_ms": 62,
+    "flat_results": [
+      {
+        "task_id": "b3f0fe41-89e9-473f-855d-cf76b290bfb6",
+        "executor": "executor-office",
+        "domain": "office",
+        "objective": "block_ip",
+        "success": false,
+        "latency_ms": 0,
+        "error": "All connection attempts failed"
+      },
+      {
+        "task_id": "027faede-98a3-406b-a923-ed6379b88b72",
+        "executor": "executor-core",
+        "domain": "core",
+        "objective": "block_ip",
+        "success": false,
+        "latency_ms": 0,
+        "error": "All connection attempts failed"
+      }
+    ],
+    "decision": {
+      "strategy": "global_isolation_and_block",
+      "priority": 1,
+      "playbook": [
+        "block_ip",
+        "tighten_acl",
+        "enable_ids_strict"
+      ],
+      "pattern": "lateral_movement"
+    }
+  },
+  "without_defense": {
+    "tasks": 0,
+    "success": 0,
+    "block_rate": 0,
+    "avg_latency_ms": 0,
+    "decision_elapsed_ms": 0,
+    "domain_stats": {},
+    "objective_stats": {},
+    "flat_results": []
+  },
+  "delta": {
+    "block_rate_delta": 0.0,
+    "latency_delta_ms": 0
+  }
+}

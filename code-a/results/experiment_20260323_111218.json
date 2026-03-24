@@ -1,0 +1,122 @@
+{
+  "generated_at": "2026-03-23T11:12:18.099778+00:00",
+  "with_defense": {
+    "tasks": 1,
+    "success": 1,
+    "task_success_rate": 1.0,
+    "avg_latency_ms": 66,
+    "domain_stats": {
+      "office": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 66,
+        "success_rate": 1.0
+      }
+    },
+    "objective_stats": {
+      "block_ip": {
+        "tasks": 1,
+        "success": 1,
+        "success_rate": 1.0
+      }
+    },
+    "attack_success": false,
+    "attack_success_rate": 0.0,
+    "lateral_spread_count": 1,
+    "containment_time_ms": 66,
+    "reached_stages": [
+      "initial_access",
+      "recon",
+      "lateral_movement"
+    ],
+    "final_stage": "lateral_movement",
+    "block_rate": 1.0,
+    "decision_elapsed_ms": 36,
+    "flat_results": [
+      {
+        "task_id": "f43d9284-9aba-4b8b-9dc4-3a26bd5d7ec3",
+        "executor": "executor-office",
+        "domain": "office",
+        "objective": "block_ip",
+        "success": true,
+        "latency_ms": 66,
+        "error": null
+      }
+    ],
+    "decision": {
+      "strategy": "targeted_containment",
+      "priority": 2,
+      "playbook": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "pattern": "lateral_movement"
+    },
+    "manager_alert_sources": [
+      "executor-office"
+    ]
+  },
+  "without_defense": {
+    "tasks": 1,
+    "success": 1,
+    "task_success_rate": 1.0,
+    "avg_latency_ms": 57,
+    "domain_stats": {
+      "office": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 57,
+        "success_rate": 1.0
+      }
+    },
+    "objective_stats": {
+      "observe_alert": {
+        "tasks": 1,
+        "success": 1,
+        "success_rate": 1.0
+      }
+    },
+    "attack_success": true,
+    "attack_success_rate": 1.0,
+    "lateral_spread_count": 3,
+    "containment_time_ms": 0,
+    "reached_stages": [
+      "initial_access",
+      "recon",
+      "lateral_movement",
+      "core_pivot",
+      "impact"
+    ],
+    "final_stage": "impact",
+    "block_rate": 0.0,
+    "decision_elapsed_ms": 25,
+    "flat_results": [
+      {
+        "task_id": "5cf20688-0b85-42d2-80d7-5e00b16a5b79",
+        "executor": "executor-office",
+        "domain": "office",
+        "objective": "observe_alert",
+        "success": true,
+        "latency_ms": 57,
+        "error": null
+      }
+    ],
+    "decision": {
+      "strategy": "targeted_containment",
+      "priority": 2,
+      "playbook": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "pattern": "lateral_movement"
+    },
+    "manager_alert_sources": [
+      "executor-office"
+    ]
+  },
+  "delta": {
+    "attack_success_rate_delta": 1.0,
+    "lateral_spread_delta": 2,
+    "latency_delta_ms": 9
+  }
+}
