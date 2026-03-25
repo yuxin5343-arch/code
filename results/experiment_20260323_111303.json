@@ -1,0 +1,156 @@
+{
+  "generated_at": "2026-03-23T11:13:03.461905+00:00",
+  "with_defense": {
+    "tasks": 2,
+    "success": 2,
+    "task_success_rate": 1.0,
+    "avg_latency_ms": 54,
+    "domain_stats": {
+      "core": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 23,
+        "success_rate": 1.0
+      },
+      "office": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 86,
+        "success_rate": 1.0
+      }
+    },
+    "objective_stats": {
+      "block_ip": {
+        "tasks": 2,
+        "success": 2,
+        "success_rate": 1.0
+      }
+    },
+    "attack_success": false,
+    "attack_success_rate": 0.0,
+    "lateral_spread_count": 1,
+    "containment_time_ms": 23,
+    "reached_stages": [
+      "initial_access",
+      "recon",
+      "lateral_movement"
+    ],
+    "final_stage": "lateral_movement",
+    "block_rate": 1.0,
+    "decision_elapsed_ms": 67,
+    "flat_results": [
+      {
+        "task_id": "e4d1aa76-dd28-4c2f-888a-fb43af2b5d81",
+        "executor": "executor-core",
+        "domain": "core",
+        "objective": "block_ip",
+        "success": true,
+        "latency_ms": 23,
+        "error": null
+      },
+      {
+        "task_id": "be8f0b64-fc67-4650-b771-9b500d8723e5",
+        "executor": "executor-office",
+        "domain": "office",
+        "objective": "block_ip",
+        "success": true,
+        "latency_ms": 86,
+        "error": null
+      }
+    ],
+    "decision": {
+      "strategy": "global_isolation_and_block",
+      "priority": 1,
+      "playbook": [
+        "block_ip",
+        "tighten_acl",
+        "enable_ids_strict"
+      ],
+      "pattern": "lateral_movement"
+    },
+    "manager_alert_sources": [
+      "executor-core",
+      "executor-office"
+    ]
+  },
+  "without_defense": {
+    "tasks": 2,
+    "success": 2,
+    "task_success_rate": 1.0,
+    "avg_latency_ms": 60,
+    "domain_stats": {
+      "core": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 39,
+        "success_rate": 1.0
+      },
+      "office": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 82,
+        "success_rate": 1.0
+      }
+    },
+    "objective_stats": {
+      "observe_alert": {
+        "tasks": 2,
+        "success": 2,
+        "success_rate": 1.0
+      }
+    },
+    "attack_success": true,
+    "attack_success_rate": 1.0,
+    "lateral_spread_count": 3,
+    "containment_time_ms": 0,
+    "reached_stages": [
+      "initial_access",
+      "recon",
+      "lateral_movement",
+      "core_pivot",
+      "impact"
+    ],
+    "final_stage": "impact",
+    "block_rate": 0.0,
+    "decision_elapsed_ms": 39,
+    "flat_results": [
+      {
+        "task_id": "c1fd622c-3855-4c69-bb21-db76355474b7",
+        "executor": "executor-core",
+        "domain": "core",
+        "objective": "observe_alert",
+        "success": true,
+        "latency_ms": 39,
+        "error": null
+      },
+      {
+        "task_id": "b3c11755-c514-4a4a-b5f4-cf76787b36fa",
+        "executor": "executor-office",
+        "domain": "office",
+        "objective": "observe_alert",
+        "success": true,
+        "latency_ms": 82,
+        "error": null
+      }
+    ],
+    "decision": {
+      "strategy": "global_isolation_and_block",
+      "priority": 1,
+      "playbook": [
+        "block_ip",
+        "tighten_acl",
+        "enable_ids_strict"
+      ],
+      "pattern": "lateral_movement"
+    },
+    "manager_alert_sources": [
+      "executor-core",
+      "executor-office"
+    ]
+  },
+  "delta": {
+    "attack_success_rate_delta": 1.0,
+    "lateral_spread_delta": 2,
+    "latency_delta_ms": -6
+  }
+}

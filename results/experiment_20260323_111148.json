@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-03-23T11:11:48.104516+00:00",
+  "with_defense": {
+    "tasks": 0,
+    "success": 0,
+    "task_success_rate": 0,
+    "attack_success_rate": 1.0,
+    "lateral_spread_count": 3,
+    "containment_time_ms": 0,
+    "avg_latency_ms": 0,
+    "decision_elapsed_ms": 0,
+    "error": "executor alerts not ready",
+    "domain_stats": {},
+    "objective_stats": {},
+    "flat_results": []
+  },
+  "without_defense": {
+    "tasks": 0,
+    "success": 0,
+    "task_success_rate": 0,
+    "attack_success_rate": 1.0,
+    "lateral_spread_count": 3,
+    "containment_time_ms": 0,
+    "avg_latency_ms": 0,
+    "decision_elapsed_ms": 0,
+    "error": "executor alerts not ready",
+    "domain_stats": {},
+    "objective_stats": {},
+    "flat_results": []
+  },
+  "delta": {
+    "attack_success_rate_delta": 0.0,
+    "lateral_spread_delta": 0,
+    "latency_delta_ms": 0
+  }
+}
