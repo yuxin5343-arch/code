@@ -1,0 +1,112 @@
+# 1. 删除过时的 version: "3.9" 字段
+services:
+  manager:
+    build: .
+    container_name: manager-agent
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+      - EXECUTOR_OFFICE_SERVICE=http://executor_office:8101
+      - EXECUTOR_CORE_SERVICE=http://executor_core:8102
+    # 2. 增加启动等待和日志输出，便于调试
+    command: ["bash", "-lc", "sleep 3 && uvicorn ai_models.api_server:app --host 0.0.0.0 --port 8000 --log-level info"]
+    ports:
+      - "8001:8000"
+    networks:
+      - office_net
+      - core_net
+    # 3. 健康检查：确保服务真的启动就绪
+    #healthcheck:
+      #test: ["CMD", "curl", "-f", "http://localhost:8000/health"]  # 需确保有健康检查接口，无则替换为 nc -z localhost 8000
+      #interval: 5s
+      #timeout: 3s
+      #retries: 3
+      #start_period: 10s
+
+  executor_office:
+    build: .
+    container_name: executor-office
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+      - EXECUTOR_DOMAIN=office
+      - EXECUTOR_ID=executor-office
+      - MANAGER_SERVICE=http://manager:8000
+      - EXECUTOR_SEED=20260326
+      - EXECUTOR_SUCCESS_RATE=0.92
+      - EXECUTOR_LATENCY_MIN_MS=20
+      - EXECUTOR_LATENCY_MAX_MS=120
+    command: ["bash", "-lc", "sleep 3 && uvicorn executor.api_server:app --host 0.0.0.0 --port 8101 --log-level info"]
+    ports:
+      - "8101:8101"
+    networks:
+      - office_net
+    #healthcheck:
+      #test: ["CMD", "nc", "-z", "localhost", "8101"]
+      #interval: 5s
+      #timeout: 3s
+      #retries: 3
+      #start_period: 10s
+
+  executor_core:
+    build: .
+    container_name: executor-core
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+      - EXECUTOR_DOMAIN=core
+      - EXECUTOR_ID=executor-core
+      - MANAGER_SERVICE=http://manager:8000
+      - EXECUTOR_SEED=20260327
+      - EXECUTOR_SUCCESS_RATE=0.92
+      - EXECUTOR_LATENCY_MIN_MS=20
+      - EXECUTOR_LATENCY_MAX_MS=120
+    command: ["bash", "-lc", "sleep 3 && uvicorn executor.api_server:app --host 0.0.0.0 --port 8102 --log-level info"]
+    ports:
+      - "8102:8102"
+    networks:
+      - core_net
+    #healthcheck:
+      #test: ["CMD", "nc", "-z", "localhost", "8102"]
+      #interval: 5s
+      #timeout: 3s
+      #retries: 3
+      #start_period: 10s
+
+  experiment:
+    build: .
+    container_name: experiment-runner
+    working_dir: /app
+    # 4. 依赖健康检查：仅当其他服务就绪后才启动
+    depends_on:
+      - manager
+      - executor_office
+      - executor_core
+      #manager:
+        #condition: service_healthy
+      #executor_office:
+        #condition: service_healthy
+      #executor_core:
+        #condition: service_healthy
+    environment:
+      - PYTHONPATH=/app
+      # 5. 增加环境变量，统一服务地址配置（便于代码中引用）
+      - MANAGER_SERVICE=http://manager:8000
+      - EXECUTOR_OFFICE_SERVICE=http://executor_office:8101
+      - EXECUTOR_CORE_SERVICE=http://executor_core:8102
+      - EXPERIMENT_SEED=20260325
+      - SCENARIO_ID=A_lateral_penetration
+      - ATTACK_MIX_THRESHOLD=0.45
+      - SCRIPTED_ATTACK_THRESHOLD=0.25
+    command: ["bash", "-lc", "python simulation/experiment_runner.py"]
+    volumes:
+      - ./results:/app/results
+    networks:
+      - office_net
+      - core_net
+
+networks:
+  office_net:
+    driver: bridge
+  core_net:
+    driver: bridge

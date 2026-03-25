@@ -1,0 +1,9 @@
+# 项目依赖
+# 锁定版本以确保兼容性
+fastapi==0.115.0  # Web 框架
+uvicorn==0.30.6  # ASGI 服务器
+httpx==0.27.2  # HTTP 客户端
+pydantic==2.9.2  # 数据验证
+pyyaml==6.0.2  # YAML 解析
+plotly==5.24.1  # 数据可视化
+paho-mqtt==2.1.0  # MQTT 客户端

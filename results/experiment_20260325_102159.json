@@ -1,0 +1,183 @@
+{
+  "generated_at": "2026-03-25T10:21:59.730240+00:00",
+  "with_defense": {
+    "tasks": 2,
+    "success": 2,
+    "task_success_rate": 1.0,
+    "avg_latency_ms": 36,
+    "domain_stats": {
+      "office": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 46,
+        "success_rate": 1.0
+      },
+      "core": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 27,
+        "success_rate": 1.0
+      }
+    },
+    "objective_stats": {
+      "block_ip": {
+        "tasks": 2,
+        "success": 2,
+        "avg_latency_ms": 36,
+        "success_rate": 1.0
+      }
+    },
+    "attack_success": false,
+    "attack_success_rate": 0.0,
+    "lateral_spread_count": 0,
+    "containment_time_ms": 27,
+    "reached_stages": [
+      "initial_access",
+      "recon"
+    ],
+    "final_stage": "recon",
+    "malicious_events": 24,
+    "benign_events": 20,
+    "true_positive": 24,
+    "false_positive": 0,
+    "true_negative": 20,
+    "false_negative": 0,
+    "false_positive_rate": 0.0,
+    "false_negative_rate": 0.0,
+    "block_rate": 1.0,
+    "decision_elapsed_ms": 44,
+    "flat_results": [
+      {
+        "task_id": "4ed7744d-9f75-4dd8-862b-034c53b3a6db",
+        "executor": "executor-office",
+        "domain": "office",
+        "objective": "block_ip",
+        "success": true,
+        "latency_ms": 46,
+        "error": null
+      },
+      {
+        "task_id": "c997ff8e-ef16-4aba-8cfd-e47598381184",
+        "executor": "executor-core",
+        "domain": "core",
+        "objective": "block_ip",
+        "success": true,
+        "latency_ms": 27,
+        "error": null
+      }
+    ],
+    "decision": {
+      "strategy": "global_isolation_and_block",
+      "priority": 1,
+      "playbook": [
+        "block_ip",
+        "tighten_acl",
+        "enable_ids_strict"
+      ],
+      "pattern": "sensitive_file_access"
+    },
+    "manager_alert_sources": [
+      "executor-core",
+      "executor-office"
+    ]
+  },
+  "without_defense": {
+    "tasks": 2,
+    "success": 2,
+    "task_success_rate": 1.0,
+    "avg_latency_ms": 105,
+    "domain_stats": {
+      "core": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 111,
+        "success_rate": 1.0
+      },
+      "office": {
+        "tasks": 1,
+        "success": 1,
+        "avg_latency_ms": 99,
+        "success_rate": 1.0
+      }
+    },
+    "objective_stats": {
+      "observe_alert": {
+        "tasks": 2,
+        "success": 2,
+        "avg_latency_ms": 105,
+        "success_rate": 1.0
+      }
+    },
+    "attack_success": true,
+    "attack_success_rate": 1.0,
+    "lateral_spread_count": 3,
+    "containment_time_ms": 0,
+    "reached_stages": [
+      "initial_access",
+      "recon",
+      "lateral_movement",
+      "core_pivot",
+      "impact"
+    ],
+    "final_stage": "impact",
+    "malicious_events": 24,
+    "benign_events": 20,
+    "true_positive": 24,
+    "false_positive": 0,
+    "true_negative": 20,
+    "false_negative": 0,
+    "false_positive_rate": 0.0,
+    "false_negative_rate": 0.0,
+    "block_rate": 0.0,
+    "decision_elapsed_ms": 36,
+    "flat_results": [
+      {
+        "task_id": "74e8e15a-706c-4ae4-84b2-50f36886a5d3",
+        "executor": "executor-core",
+        "domain": "core",
+        "objective": "observe_alert",
+        "success": true,
+        "latency_ms": 111,
+        "error": null
+      },
+      {
+        "task_id": "15905ac9-fce4-413a-8503-17df09c5a908",
+        "executor": "executor-office",
+        "domain": "office",
+        "objective": "observe_alert",
+        "success": true,
+        "latency_ms": 99,
+        "error": null
+      }
+    ],
+    "decision": {
+      "strategy": "global_isolation_and_block",
+      "priority": 1,
+      "playbook": [
+        "block_ip",
+        "tighten_acl",
+        "enable_ids_strict"
+      ],
+      "pattern": "sensitive_file_access"
+    },
+    "manager_alert_sources": [
+      "executor-core",
+      "executor-office"
+    ]
+  },
+  "delta": {
+    "attack_success_rate_delta": 1.0,
+    "lateral_spread_delta": 3,
+    "latency_delta_ms": -69
+  },
+  "reproducibility": {
+    "seed": 20260325,
+    "attack_mix_threshold": 0.45,
+    "scripted_attack_threshold": 0.25,
+    "attack_mode": "real",
+    "attack_profile": "mixed",
+    "manager_service": "http://manager:8000",
+    "office_executor_service": "http://executor_office:8101",
+    "core_executor_service": "http://executor_core:8102"
+  }
+}
