@@ -222,7 +222,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
 
     fig.update_layout(
         title=(
-            "Playbook-Driven 400-Run Report "
+            f"Playbook-Driven {int(experiment.get('total_samples', 0))}-Sample Report "
             f"({experiment.get('generated_at', 'N/A')}) | "
             f"max_rounds={int(collab.get('max_rounds', 1))}, timeout_ms={int(collab.get('timeout_ms', 0))}"
         ),
@@ -235,11 +235,11 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
     fig.update_yaxes(title_text="rate", row=1, col=1)
     fig.update_yaxes(title_text="rate", row=1, col=2)
     fig.update_yaxes(title_text="ratio", row=2, col=1)
-    fig.update_yaxes(title_text="count/rate", row=2, col=2)
-    fig.update_yaxes(title_text="count", row=3, col=1)
+    fig.update_yaxes(title_text="数量", row=2, col=2)
+    fig.update_yaxes(title_text="数量", row=3, col=1)
     fig.update_yaxes(title_text="latency (ms)", row=3, col=2)
-    fig.update_yaxes(title_text="count", row=4, col=1)
-    fig.update_yaxes(title_text="count", row=5, col=1)
+    fig.update_yaxes(title_text="数量", row=4, col=1)
+    fig.update_yaxes(title_text="数量", row=5, col=1)
     fig.update_yaxes(title_text="value", row=5, col=2)
 
     fig.write_html(str(output), include_plotlyjs="cdn", full_html=True)

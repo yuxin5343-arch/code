@@ -26,15 +26,15 @@ actions:
     business_cost: 1
 
 risk_min_gain:
-  critical: 8
-  high: 6
-  medium: 4
+  critical: 5
+  high: 4
+  medium: 3
   low: 2
 
 # Domain criticality offsets: higher value means stricter minimum gain.
 # Core domain is less tolerant to defense degradation.
 domain_min_gain_offset:
-  core: 2
+  core: 0
   office: 0
 
 # Confidence-aware filtering for counter proposals.

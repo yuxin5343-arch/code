@@ -152,15 +152,16 @@ python simulation/experiment_runner.py
 
 实验脚本已切换为确定性 playbook 模式（`simulation/playbooks.py`），不再依赖完全随机流量。
 
-- 四个核心场景：
+- 五个核心场景：
   - A：无分歧协同（Happy Path）
   - B：关键资产保护触发反提案
   - C：资源受限协同（预算耗尽）
   - D：跨域弱信号融合
+  - E：误报拦截（纯噪音/良性扫描）
 - 每个场景在两种模式下各运行 50 次：
   - `oneshot_collab`（一轮协同）
   - `no_collab`（无协同对照）
-- 默认总样本数：`4 * 50 * 2 = 400`
+- 默认总样本数：`5 * 50 * 2 = 500`
 
 可选参数：
 

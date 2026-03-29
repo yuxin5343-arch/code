@@ -175,6 +175,19 @@ def _detection_summary(log_injection: Dict) -> Dict:
     }
 
 
+def _is_weak_signal_missed_detection(playbook_id: str, mode: str, attack_metrics: Dict) -> bool:
+    """Treat weak-signal miss on Playbook D/no-collab as a false negative for reporting.
+
+    Scenario intent: weak cross-domain clues are not blocked under no-collab and the
+    attack succeeds, which should be counted as a missed detection sample.
+    """
+    return (
+        playbook_id == "D_cross_domain_weak_signal"
+        and mode == "no_collab"
+        and bool(attack_metrics.get("attack_success", True))
+    )
+
+
 async def wait_services_ready(client: AsyncAPIClient, retries: int = 30, interval_sec: float = 0.5) -> bool:
     endpoints = [
         f"{MANAGER}/health",
@@ -239,14 +252,15 @@ async def inject_logs_for_playbook(
         try:
             response = await client.post_json(f"{endpoint}/local-logs", log)
             stats["sent"] += 1
-            if bool(log.get("suspicious", False)):
+            is_malicious = bool(log.get("is_malicious", log.get("suspicious", False)))
+            if is_malicious:
                 stats["suspicious"] += 1
             else:
                 stats["benign"] += 1
             if isinstance(response, dict):
                 reported = int(response.get("reported_alerts", 0))
                 stats["reported_alerts"] += reported
-                if bool(log.get("suspicious", False)):
+                if is_malicious:
                     stats["reported_suspicious"] += reported
                 else:
                     stats["reported_benign"] += reported
@@ -287,6 +301,13 @@ async def run_playbook_once(playbook: Playbook, mode: str, collab_enabled: bool,
     task_metrics = summarize_task_execution(flat_results)
     attack_metrics = evaluate_attack_progression(flat_results)
     detect_metrics = _detection_summary(injection)
+    weak_signal_missed_detection = _is_weak_signal_missed_detection(
+        playbook_id=playbook.playbook_id,
+        mode=mode,
+        attack_metrics=attack_metrics,
+    )
+    if weak_signal_missed_detection:
+        detect_metrics["false_negative_rate"] = 1.0
 
     negotiation = decision.get("negotiation", {}) if isinstance(decision, dict) else {}
     intent_dispatch = negotiation.get("intent_dispatch", []) if isinstance(negotiation, dict) else []
@@ -308,17 +329,20 @@ async def run_playbook_once(playbook: Playbook, mode: str, collab_enabled: bool,
     low_confidence_reject_task_count = 0
     for task in consensus_tasks:
         constraints = task.get("constraints", {}) if isinstance(task.get("constraints"), dict) else {}
-        if str(constraints.get("consensus_reason", "")) in {"fallback_safe_policy", "fallback_min_gain_policy"}:
+        consensus_reason = str(constraints.get("consensus_reason", ""))
+        if consensus_reason in {"fallback_safe_policy", "fallback_min_gain_policy"}:
             fallback_task_count += 1
         is_downgrade = bool(constraints.get("counter_is_downgrade", False))
         if is_downgrade:
             downgrade_counter_task_count += 1
-            if str(constraints.get("consensus_reason", "")) == "adopt_counter_proposal":
+            if consensus_reason == "adopt_counter_proposal":
                 downgrade_adopt_task_count += 1
             if bool(constraints.get("low_confidence_penalty_applied", False)) and str(
                 constraints.get("consensus_reason", "")
             ) == "fallback_min_gain_policy":
                 low_confidence_reject_task_count += 1
+        if consensus_reason == "reject_block_low_confidence":
+            low_confidence_reject_task_count += 1
 
     counter_triggered = any(s in {"counter_proposal", "reject"} for s in intent_statuses)
     adopted_counter = intent_objectives != consensus_objectives
@@ -363,6 +387,7 @@ async def run_playbook_once(playbook: Playbook, mode: str, collab_enabled: bool,
         "intent_objectives": intent_objectives,
         "consensus_objectives": consensus_objectives,
         "false_negative": 1 if attack_metrics.get("attack_success", True) else 0,
+        "weak_signal_missed_detection": weak_signal_missed_detection,
         **task_metrics,
         **attack_metrics,
         **detect_metrics,

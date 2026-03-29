@@ -22,6 +22,7 @@ class PlaybookEvent:
     src_ip: str
     dst_ip: str
     suspicious: bool
+    is_malicious: bool = True
     asset_level: str = "normal"
     asset_id: str = ""
 
@@ -54,6 +55,7 @@ def build_log(event: PlaybookEvent, run_id: str, index: int, timestamp: str) -> 
         "src_ip": event.src_ip,
         "dst_ip": event.dst_ip,
         "suspicious": event.suspicious,
+        "is_malicious": event.is_malicious,
         "asset_level": event.asset_level,
         "asset_id": event.asset_id,
         "evidence": {
@@ -202,7 +204,7 @@ def load_playbooks() -> List[Playbook]:
                     event_type="ssh_login_failed",
                     attack_type="ssh_login_failed",
                     stage="recon",
-                    severity="low",
+                    severity="medium",
                     src_ip="10.77.7.7",
                     dst_ip="10.20.5.7",
                     suspicious=True,
@@ -215,12 +217,62 @@ def load_playbooks() -> List[Playbook]:
                     event_type="port_scan",
                     attack_type="port_scan",
                     stage="recon",
-                    severity="low",
+                    severity="medium",
                     src_ip="10.77.7.7",
                     dst_ip="10.20.9.7",
                     suspicious=True,
                     asset_level="normal",
                     asset_id="core-api-1",
+                ),
+            ],
+        ),
+        Playbook(
+            playbook_id="E_false_positive_noise",
+            title="场景E：误报拦截（纯噪音）",
+            objective="验证协同可识别低置信度跨域噪音并拒绝阻断",
+            notes="注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+            events=[
+                PlaybookEvent(
+                    domain="office",
+                    device_type="ids",
+                    event_type="asset_inventory_scan",
+                    attack_type="port_scan",
+                    stage="recon",
+                    severity="high",
+                    src_ip="10.11.1.10",
+                    dst_ip="10.20.5.70",
+                    suspicious=True,
+                    is_malicious=False,
+                    asset_level="normal",
+                    asset_id="office-asset-scanner",
+                ),
+                PlaybookEvent(
+                    domain="office",
+                    device_type="ids",
+                    event_type="vuln_baseline_probe",
+                    attack_type="port_scan",
+                    stage="recon",
+                    severity="high",
+                    src_ip="10.11.1.10",
+                    dst_ip="10.20.5.71",
+                    suspicious=True,
+                    is_malicious=False,
+                    asset_level="normal",
+                    asset_id="office-asset-scanner",
+                ),
+                PlaybookEvent(
+                    domain="core",
+                    device_type="firewall",
+                    event_type="backup_health_check",
+                    attack_type="port_scan",
+                    stage="recon",
+                    severity="high",
+                    src_ip="10.12.2.20",
+                    dst_ip="10.20.9.80",
+                    suspicious=True,
+                    is_malicious=False,
+                    asset_level="normal",
+                    asset_id="core-backup-agent",
                 ),
             ],
         ),

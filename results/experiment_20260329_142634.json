@@ -1,0 +1,6251 @@
+{
+  "generated_at": "2026-03-29T14:26:34.066331+00:00",
+  "experiment_type": "playbook_driven",
+  "total_samples": 50,
+  "expected_samples": 50,
+  "samples_per_mode": {
+    "oneshot_collab": 25,
+    "no_collab": 25
+  },
+  "playbooks": [
+    {
+      "playbook_id": "A_happy_path",
+      "title": "场景A：无分歧协同（Happy Path）",
+      "objective": "验证协商链路闭环与可接受时延",
+      "notes": "普通资产，不触发关键资产保护或资源约束。"
+    },
+    {
+      "playbook_id": "B_critical_asset_counter",
+      "title": "场景B：关键资产保护触发反提案",
+      "objective": "验证执行器依据局部代价约束触发反提案",
+      "notes": "Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。"
+    },
+    {
+      "playbook_id": "C_budget_exhaustion",
+      "title": "场景C：资源受限协同",
+      "objective": "验证资源预算耗尽时系统仍能给出兜底决策",
+      "notes": "先耗尽 office 的 block 预算，再注入攻击。"
+    },
+    {
+      "playbook_id": "D_cross_domain_weak_signal",
+      "title": "场景D：跨域弱信号融合",
+      "objective": "验证低危弱信号在协同时可被识别，降低漏报",
+      "notes": "单域低危均可忽略，跨域关联后触发全局升级。"
+    },
+    {
+      "playbook_id": "E_false_positive_noise",
+      "title": "场景E：误报拦截（纯噪音）",
+      "objective": "验证协同可识别低置信度跨域噪音并拒绝阻断",
+      "notes": "注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。"
+    }
+  ],
+  "summary": {
+    "by_mode": {
+      "oneshot_collab": {
+        "samples": 25,
+        "tasks": 50,
+        "success": 50,
+        "task_success_rate": 1.0,
+        "attack_success_rate": 0.4,
+        "block_rate": 0.6,
+        "false_positive_rate": 0.2,
+        "false_negative_rate": 0.0,
+        "avg_latency_ms": 80,
+        "containment_time_ms": 29,
+        "decision_elapsed_ms": 141,
+        "counter_rate": 0.4,
+        "adopt_counter_rate": 0.6,
+        "counter_total": 10,
+        "adopt_counter_total": 15,
+        "fallback_total": 5,
+        "fallback_rate": 0.2,
+        "intent_accept_rate": 0.8,
+        "intent_statuses": {
+          "counts": {
+            "accept": 40,
+            "counter_proposal": 10,
+            "reject": 0,
+            "other": 0
+          },
+          "ratios": {
+            "accept": 0.8,
+            "counter_proposal": 0.2,
+            "reject": 0.0,
+            "other": 0.0
+          }
+        },
+        "max_rounds": 1,
+        "timeout_ms": 3000,
+        "lateral_spread_block_count": 15,
+        "lateral_spread_count": 1.8,
+        "domain_weight_factor_avg": 0.78,
+        "risk_calibrated_rate": 0.2,
+        "base_risk_distribution": {
+          "low": 0,
+          "medium": 5,
+          "high": 15,
+          "critical": 5
+        },
+        "final_risk_distribution": {
+          "low": 0,
+          "medium": 0,
+          "high": 20,
+          "critical": 5
+        },
+        "downgrade_counter_total": 10,
+        "downgrade_adopt_total": 5,
+        "downgrade_reject_total": 5,
+        "downgrade_adoption_rate": 0.5,
+        "low_confidence_reject_total": 5,
+        "low_confidence_reject_rate": 0.5,
+        "domain_stats": {
+          "office": {
+            "tasks": 25,
+            "success": 25,
+            "success_rate": 1.0,
+            "avg_latency_ms": 49
+          },
+          "core": {
+            "tasks": 25,
+            "success": 25,
+            "success_rate": 1.0,
+            "avg_latency_ms": 112
+          }
+        }
+      },
+      "no_collab": {
+        "samples": 25,
+        "tasks": 50,
+        "success": 50,
+        "task_success_rate": 1.0,
+        "attack_success_rate": 1.0,
+        "block_rate": 0.0,
+        "false_positive_rate": 0.2,
+        "false_negative_rate": 0.2,
+        "avg_latency_ms": 80,
+        "containment_time_ms": 0,
+        "decision_elapsed_ms": 143,
+        "counter_rate": 0.0,
+        "adopt_counter_rate": 0.0,
+        "counter_total": 0,
+        "adopt_counter_total": 0,
+        "fallback_total": 0,
+        "fallback_rate": 0.0,
+        "intent_accept_rate": 1.0,
+        "intent_statuses": {
+          "counts": {
+            "accept": 50,
+            "counter_proposal": 0,
+            "reject": 0,
+            "other": 0
+          },
+          "ratios": {
+            "accept": 1.0,
+            "counter_proposal": 0.0,
+            "reject": 0.0,
+            "other": 0.0
+          }
+        },
+        "max_rounds": 1,
+        "timeout_ms": 3000,
+        "lateral_spread_block_count": 0,
+        "lateral_spread_count": 3.0,
+        "domain_weight_factor_avg": 0.78,
+        "risk_calibrated_rate": 0.2,
+        "base_risk_distribution": {
+          "low": 0,
+          "medium": 5,
+          "high": 15,
+          "critical": 5
+        },
+        "final_risk_distribution": {
+          "low": 0,
+          "medium": 0,
+          "high": 20,
+          "critical": 5
+        },
+        "downgrade_counter_total": 0,
+        "downgrade_adopt_total": 0,
+        "downgrade_reject_total": 0,
+        "downgrade_adoption_rate": 0.0,
+        "low_confidence_reject_total": 0,
+        "low_confidence_reject_rate": 0.0,
+        "domain_stats": {
+          "office": {
+            "tasks": 25,
+            "success": 25,
+            "success_rate": 1.0,
+            "avg_latency_ms": 49
+          },
+          "core": {
+            "tasks": 25,
+            "success": 25,
+            "success_rate": 1.0,
+            "avg_latency_ms": 112
+          }
+        }
+      }
+    },
+    "by_mode_playbook": {
+      "oneshot_collab": {
+        "A_happy_path": {
+          "samples": 5,
+          "tasks": 10,
+          "success": 10,
+          "task_success_rate": 1.0,
+          "attack_success_rate": 0.0,
+          "block_rate": 1.0,
+          "false_positive_rate": 0.0,
+          "false_negative_rate": 0.0,
+          "avg_latency_ms": 80,
+          "containment_time_ms": 49,
+          "decision_elapsed_ms": 143,
+          "counter_rate": 0.0,
+          "adopt_counter_rate": 0.0,
+          "counter_total": 0,
+          "adopt_counter_total": 0,
+          "fallback_total": 0,
+          "fallback_rate": 0.0,
+          "intent_accept_rate": 1.0,
+          "intent_statuses": {
+            "counts": {
+              "accept": 10,
+              "counter_proposal": 0,
+              "reject": 0,
+              "other": 0
+            },
+            "ratios": {
+              "accept": 1.0,
+              "counter_proposal": 0.0,
+              "reject": 0.0,
+              "other": 0.0
+            }
+          },
+          "max_rounds": 1,
+          "timeout_ms": 3000,
+          "lateral_spread_block_count": 5,
+          "lateral_spread_count": 1.0,
+          "domain_weight_factor_avg": 0.85,
+          "risk_calibrated_rate": 0.0,
+          "base_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "final_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "downgrade_counter_total": 0,
+          "downgrade_adopt_total": 0,
+          "downgrade_reject_total": 0,
+          "downgrade_adoption_rate": 0.0,
+          "low_confidence_reject_total": 0,
+          "low_confidence_reject_rate": 0.0,
+          "domain_stats": {
+            "office": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 49
+            },
+            "core": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 112
+            }
+          }
+        },
+        "B_critical_asset_counter": {
+          "samples": 5,
+          "tasks": 10,
+          "success": 10,
+          "task_success_rate": 1.0,
+          "attack_success_rate": 0.0,
+          "block_rate": 1.0,
+          "false_positive_rate": 0.0,
+          "false_negative_rate": 0.0,
+          "avg_latency_ms": 80,
+          "containment_time_ms": 49,
+          "decision_elapsed_ms": 143,
+          "counter_rate": 1.0,
+          "adopt_counter_rate": 1.0,
+          "counter_total": 5,
+          "adopt_counter_total": 5,
+          "fallback_total": 0,
+          "fallback_rate": 0.0,
+          "intent_accept_rate": 0.5,
+          "intent_statuses": {
+            "counts": {
+              "accept": 5,
+              "counter_proposal": 5,
+              "reject": 0,
+              "other": 0
+            },
+            "ratios": {
+              "accept": 0.5,
+              "counter_proposal": 0.5,
+              "reject": 0.0,
+              "other": 0.0
+            }
+          },
+          "max_rounds": 1,
+          "timeout_ms": 3000,
+          "lateral_spread_block_count": 5,
+          "lateral_spread_count": 1.0,
+          "domain_weight_factor_avg": 0.85,
+          "risk_calibrated_rate": 0.0,
+          "base_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "critical": 5
+          },
+          "final_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "critical": 5
+          },
+          "downgrade_counter_total": 5,
+          "downgrade_adopt_total": 5,
+          "downgrade_reject_total": 0,
+          "downgrade_adoption_rate": 1.0,
+          "low_confidence_reject_total": 0,
+          "low_confidence_reject_rate": 0.0,
+          "domain_stats": {
+            "office": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 49
+            },
+            "core": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 112
+            }
+          }
+        },
+        "C_budget_exhaustion": {
+          "samples": 5,
+          "tasks": 10,
+          "success": 10,
+          "task_success_rate": 1.0,
+          "attack_success_rate": 1.0,
+          "block_rate": 0.0,
+          "false_positive_rate": 0.0,
+          "false_negative_rate": 0.0,
+          "avg_latency_ms": 80,
+          "containment_time_ms": 0,
+          "decision_elapsed_ms": 139,
+          "counter_rate": 1.0,
+          "adopt_counter_rate": 1.0,
+          "counter_total": 5,
+          "adopt_counter_total": 5,
+          "fallback_total": 5,
+          "fallback_rate": 1.0,
+          "intent_accept_rate": 0.5,
+          "intent_statuses": {
+            "counts": {
+              "accept": 5,
+              "counter_proposal": 5,
+              "reject": 0,
+              "other": 0
+            },
+            "ratios": {
+              "accept": 0.5,
+              "counter_proposal": 0.5,
+              "reject": 0.0,
+              "other": 0.0
+            }
+          },
+          "max_rounds": 1,
+          "timeout_ms": 3000,
+          "lateral_spread_block_count": 0,
+          "lateral_spread_count": 3.0,
+          "domain_weight_factor_avg": 0.85,
+          "risk_calibrated_rate": 0.0,
+          "base_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "final_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "downgrade_counter_total": 5,
+          "downgrade_adopt_total": 0,
+          "downgrade_reject_total": 5,
+          "downgrade_adoption_rate": 0.0,
+          "low_confidence_reject_total": 0,
+          "low_confidence_reject_rate": 0.0,
+          "domain_stats": {
+            "office": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 49
+            },
+            "core": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 112
+            }
+          }
+        },
+        "D_cross_domain_weak_signal": {
+          "samples": 5,
+          "tasks": 10,
+          "success": 10,
+          "task_success_rate": 1.0,
+          "attack_success_rate": 0.0,
+          "block_rate": 1.0,
+          "false_positive_rate": 0.0,
+          "false_negative_rate": 0.0,
+          "avg_latency_ms": 80,
+          "containment_time_ms": 49,
+          "decision_elapsed_ms": 138,
+          "counter_rate": 0.0,
+          "adopt_counter_rate": 0.0,
+          "counter_total": 0,
+          "adopt_counter_total": 0,
+          "fallback_total": 0,
+          "fallback_rate": 0.0,
+          "intent_accept_rate": 1.0,
+          "intent_statuses": {
+            "counts": {
+              "accept": 10,
+              "counter_proposal": 0,
+              "reject": 0,
+              "other": 0
+            },
+            "ratios": {
+              "accept": 1.0,
+              "counter_proposal": 0.0,
+              "reject": 0.0,
+              "other": 0.0
+            }
+          },
+          "max_rounds": 1,
+          "timeout_ms": 3000,
+          "lateral_spread_block_count": 5,
+          "lateral_spread_count": 1.0,
+          "domain_weight_factor_avg": 0.6,
+          "risk_calibrated_rate": 1.0,
+          "base_risk_distribution": {
+            "low": 0,
+            "medium": 5,
+            "high": 0,
+            "critical": 0
+          },
+          "final_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "downgrade_counter_total": 0,
+          "downgrade_adopt_total": 0,
+          "downgrade_reject_total": 0,
+          "downgrade_adoption_rate": 0.0,
+          "low_confidence_reject_total": 0,
+          "low_confidence_reject_rate": 0.0,
+          "domain_stats": {
+            "office": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 49
+            },
+            "core": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 112
+            }
+          }
+        },
+        "E_false_positive_noise": {
+          "samples": 5,
+          "tasks": 10,
+          "success": 10,
+          "task_success_rate": 1.0,
+          "attack_success_rate": 1.0,
+          "block_rate": 0.0,
+          "false_positive_rate": 1.0,
+          "false_negative_rate": 0.0,
+          "avg_latency_ms": 80,
+          "containment_time_ms": 0,
+          "decision_elapsed_ms": 141,
+          "counter_rate": 0.0,
+          "adopt_counter_rate": 1.0,
+          "counter_total": 0,
+          "adopt_counter_total": 5,
+          "fallback_total": 0,
+          "fallback_rate": 0.0,
+          "intent_accept_rate": 1.0,
+          "intent_statuses": {
+            "counts": {
+              "accept": 10,
+              "counter_proposal": 0,
+              "reject": 0,
+              "other": 0
+            },
+            "ratios": {
+              "accept": 1.0,
+              "counter_proposal": 0.0,
+              "reject": 0.0,
+              "other": 0.0
+            }
+          },
+          "max_rounds": 1,
+          "timeout_ms": 3000,
+          "lateral_spread_block_count": 0,
+          "lateral_spread_count": 3.0,
+          "domain_weight_factor_avg": 0.75,
+          "risk_calibrated_rate": 0.0,
+          "base_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "final_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "downgrade_counter_total": 0,
+          "downgrade_adopt_total": 0,
+          "downgrade_reject_total": 0,
+          "downgrade_adoption_rate": 0.0,
+          "low_confidence_reject_total": 5,
+          "low_confidence_reject_rate": 0.0,
+          "domain_stats": {
+            "office": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 49
+            },
+            "core": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 112
+            }
+          }
+        }
+      },
+      "no_collab": {
+        "A_happy_path": {
+          "samples": 5,
+          "tasks": 10,
+          "success": 10,
+          "task_success_rate": 1.0,
+          "attack_success_rate": 1.0,
+          "block_rate": 0.0,
+          "false_positive_rate": 0.0,
+          "false_negative_rate": 0.0,
+          "avg_latency_ms": 80,
+          "containment_time_ms": 0,
+          "decision_elapsed_ms": 140,
+          "counter_rate": 0.0,
+          "adopt_counter_rate": 0.0,
+          "counter_total": 0,
+          "adopt_counter_total": 0,
+          "fallback_total": 0,
+          "fallback_rate": 0.0,
+          "intent_accept_rate": 1.0,
+          "intent_statuses": {
+            "counts": {
+              "accept": 10,
+              "counter_proposal": 0,
+              "reject": 0,
+              "other": 0
+            },
+            "ratios": {
+              "accept": 1.0,
+              "counter_proposal": 0.0,
+              "reject": 0.0,
+              "other": 0.0
+            }
+          },
+          "max_rounds": 1,
+          "timeout_ms": 3000,
+          "lateral_spread_block_count": 0,
+          "lateral_spread_count": 3.0,
+          "domain_weight_factor_avg": 0.85,
+          "risk_calibrated_rate": 0.0,
+          "base_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "final_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "downgrade_counter_total": 0,
+          "downgrade_adopt_total": 0,
+          "downgrade_reject_total": 0,
+          "downgrade_adoption_rate": 0.0,
+          "low_confidence_reject_total": 0,
+          "low_confidence_reject_rate": 0.0,
+          "domain_stats": {
+            "office": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 49
+            },
+            "core": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 112
+            }
+          }
+        },
+        "B_critical_asset_counter": {
+          "samples": 5,
+          "tasks": 10,
+          "success": 10,
+          "task_success_rate": 1.0,
+          "attack_success_rate": 1.0,
+          "block_rate": 0.0,
+          "false_positive_rate": 0.0,
+          "false_negative_rate": 0.0,
+          "avg_latency_ms": 80,
+          "containment_time_ms": 0,
+          "decision_elapsed_ms": 143,
+          "counter_rate": 0.0,
+          "adopt_counter_rate": 0.0,
+          "counter_total": 0,
+          "adopt_counter_total": 0,
+          "fallback_total": 0,
+          "fallback_rate": 0.0,
+          "intent_accept_rate": 1.0,
+          "intent_statuses": {
+            "counts": {
+              "accept": 10,
+              "counter_proposal": 0,
+              "reject": 0,
+              "other": 0
+            },
+            "ratios": {
+              "accept": 1.0,
+              "counter_proposal": 0.0,
+              "reject": 0.0,
+              "other": 0.0
+            }
+          },
+          "max_rounds": 1,
+          "timeout_ms": 3000,
+          "lateral_spread_block_count": 0,
+          "lateral_spread_count": 3.0,
+          "domain_weight_factor_avg": 0.85,
+          "risk_calibrated_rate": 0.0,
+          "base_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "critical": 5
+          },
+          "final_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "critical": 5
+          },
+          "downgrade_counter_total": 0,
+          "downgrade_adopt_total": 0,
+          "downgrade_reject_total": 0,
+          "downgrade_adoption_rate": 0.0,
+          "low_confidence_reject_total": 0,
+          "low_confidence_reject_rate": 0.0,
+          "domain_stats": {
+            "office": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 49
+            },
+            "core": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 112
+            }
+          }
+        },
+        "C_budget_exhaustion": {
+          "samples": 5,
+          "tasks": 10,
+          "success": 10,
+          "task_success_rate": 1.0,
+          "attack_success_rate": 1.0,
+          "block_rate": 0.0,
+          "false_positive_rate": 0.0,
+          "false_negative_rate": 0.0,
+          "avg_latency_ms": 80,
+          "containment_time_ms": 0,
+          "decision_elapsed_ms": 145,
+          "counter_rate": 0.0,
+          "adopt_counter_rate": 0.0,
+          "counter_total": 0,
+          "adopt_counter_total": 0,
+          "fallback_total": 0,
+          "fallback_rate": 0.0,
+          "intent_accept_rate": 1.0,
+          "intent_statuses": {
+            "counts": {
+              "accept": 10,
+              "counter_proposal": 0,
+              "reject": 0,
+              "other": 0
+            },
+            "ratios": {
+              "accept": 1.0,
+              "counter_proposal": 0.0,
+              "reject": 0.0,
+              "other": 0.0
+            }
+          },
+          "max_rounds": 1,
+          "timeout_ms": 3000,
+          "lateral_spread_block_count": 0,
+          "lateral_spread_count": 3.0,
+          "domain_weight_factor_avg": 0.85,
+          "risk_calibrated_rate": 0.0,
+          "base_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "final_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "downgrade_counter_total": 0,
+          "downgrade_adopt_total": 0,
+          "downgrade_reject_total": 0,
+          "downgrade_adoption_rate": 0.0,
+          "low_confidence_reject_total": 0,
+          "low_confidence_reject_rate": 0.0,
+          "domain_stats": {
+            "office": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 49
+            },
+            "core": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 112
+            }
+          }
+        },
+        "D_cross_domain_weak_signal": {
+          "samples": 5,
+          "tasks": 10,
+          "success": 10,
+          "task_success_rate": 1.0,
+          "attack_success_rate": 1.0,
+          "block_rate": 0.0,
+          "false_positive_rate": 0.0,
+          "false_negative_rate": 1.0,
+          "avg_latency_ms": 80,
+          "containment_time_ms": 0,
+          "decision_elapsed_ms": 139,
+          "counter_rate": 0.0,
+          "adopt_counter_rate": 0.0,
+          "counter_total": 0,
+          "adopt_counter_total": 0,
+          "fallback_total": 0,
+          "fallback_rate": 0.0,
+          "intent_accept_rate": 1.0,
+          "intent_statuses": {
+            "counts": {
+              "accept": 10,
+              "counter_proposal": 0,
+              "reject": 0,
+              "other": 0
+            },
+            "ratios": {
+              "accept": 1.0,
+              "counter_proposal": 0.0,
+              "reject": 0.0,
+              "other": 0.0
+            }
+          },
+          "max_rounds": 1,
+          "timeout_ms": 3000,
+          "lateral_spread_block_count": 0,
+          "lateral_spread_count": 3.0,
+          "domain_weight_factor_avg": 0.6,
+          "risk_calibrated_rate": 1.0,
+          "base_risk_distribution": {
+            "low": 0,
+            "medium": 5,
+            "high": 0,
+            "critical": 0
+          },
+          "final_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "downgrade_counter_total": 0,
+          "downgrade_adopt_total": 0,
+          "downgrade_reject_total": 0,
+          "downgrade_adoption_rate": 0.0,
+          "low_confidence_reject_total": 0,
+          "low_confidence_reject_rate": 0.0,
+          "domain_stats": {
+            "office": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 49
+            },
+            "core": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 112
+            }
+          }
+        },
+        "E_false_positive_noise": {
+          "samples": 5,
+          "tasks": 10,
+          "success": 10,
+          "task_success_rate": 1.0,
+          "attack_success_rate": 1.0,
+          "block_rate": 0.0,
+          "false_positive_rate": 1.0,
+          "false_negative_rate": 0.0,
+          "avg_latency_ms": 80,
+          "containment_time_ms": 0,
+          "decision_elapsed_ms": 148,
+          "counter_rate": 0.0,
+          "adopt_counter_rate": 0.0,
+          "counter_total": 0,
+          "adopt_counter_total": 0,
+          "fallback_total": 0,
+          "fallback_rate": 0.0,
+          "intent_accept_rate": 1.0,
+          "intent_statuses": {
+            "counts": {
+              "accept": 10,
+              "counter_proposal": 0,
+              "reject": 0,
+              "other": 0
+            },
+            "ratios": {
+              "accept": 1.0,
+              "counter_proposal": 0.0,
+              "reject": 0.0,
+              "other": 0.0
+            }
+          },
+          "max_rounds": 1,
+          "timeout_ms": 3000,
+          "lateral_spread_block_count": 0,
+          "lateral_spread_count": 3.0,
+          "domain_weight_factor_avg": 0.75,
+          "risk_calibrated_rate": 0.0,
+          "base_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "final_risk_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 5,
+            "critical": 0
+          },
+          "downgrade_counter_total": 0,
+          "downgrade_adopt_total": 0,
+          "downgrade_reject_total": 0,
+          "downgrade_adoption_rate": 0.0,
+          "low_confidence_reject_total": 0,
+          "low_confidence_reject_rate": 0.0,
+          "domain_stats": {
+            "office": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 49
+            },
+            "core": {
+              "tasks": 5,
+              "success": 5,
+              "success_rate": 1.0,
+              "avg_latency_ms": 112
+            }
+          }
+        }
+      }
+    }
+  },
+  "samples": [
+    {
+      "run_id": "A_happy_path-oneshot_collab-1",
+      "seed": 20260531,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "A_happy_path",
+      "playbook_title": "场景A：无分歧协同（Happy Path）",
+      "playbook_objective": "验证协商链路闭环与可接受时延",
+      "playbook_notes": "普通资产，不触发关键资产保护或资源约束。",
+      "decision_elapsed_ms": 158,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "9cfc4b52-345d-49d0-ba3d-982440200fba",
+          "incident_id": "ff7ba1b6-a86d-43e8-8cf8-b218b20ba695",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_ip",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "9f72d794-67bf-4dba-8daa-447875106b46",
+          "incident_id": "ff7ba1b6-a86d-43e8-8cf8-b218b20ba695",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "A_happy_path-oneshot_collab-2",
+      "seed": 20260532,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "A_happy_path",
+      "playbook_title": "场景A：无分歧协同（Happy Path）",
+      "playbook_objective": "验证协商链路闭环与可接受时延",
+      "playbook_notes": "普通资产，不触发关键资产保护或资源约束。",
+      "decision_elapsed_ms": 131,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "48f91da7-5059-4dfe-a6e8-4b81617f0eb9",
+          "incident_id": "4221bc6a-64a4-4523-8295-c4908fd9b355",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_ip",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "e9c7b006-f228-4441-a161-198f1fd2d814",
+          "incident_id": "4221bc6a-64a4-4523-8295-c4908fd9b355",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "A_happy_path-oneshot_collab-3",
+      "seed": 20260533,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "A_happy_path",
+      "playbook_title": "场景A：无分歧协同（Happy Path）",
+      "playbook_objective": "验证协商链路闭环与可接受时延",
+      "playbook_notes": "普通资产，不触发关键资产保护或资源约束。",
+      "decision_elapsed_ms": 142,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "0c18a32f-8759-40b0-a925-5e5e4f61ecaa",
+          "incident_id": "201b2eba-3002-49c6-82c1-3b56849e65ef",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_ip",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "ae517544-1cf7-4f38-97dc-a1d47230bc98",
+          "incident_id": "201b2eba-3002-49c6-82c1-3b56849e65ef",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "A_happy_path-oneshot_collab-4",
+      "seed": 20260534,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "A_happy_path",
+      "playbook_title": "场景A：无分歧协同（Happy Path）",
+      "playbook_objective": "验证协商链路闭环与可接受时延",
+      "playbook_notes": "普通资产，不触发关键资产保护或资源约束。",
+      "decision_elapsed_ms": 151,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "874cf1dc-96cd-4e9a-8446-54715ad945bd",
+          "incident_id": "026ac174-b0df-4b60-867a-cb38c03a4431",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_ip",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "5d702997-57c2-4b0b-a99b-6e312b5b817f",
+          "incident_id": "026ac174-b0df-4b60-867a-cb38c03a4431",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "A_happy_path-oneshot_collab-5",
+      "seed": 20260535,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "A_happy_path",
+      "playbook_title": "场景A：无分歧协同（Happy Path）",
+      "playbook_objective": "验证协商链路闭环与可接受时延",
+      "playbook_notes": "普通资产，不触发关键资产保护或资源约束。",
+      "decision_elapsed_ms": 134,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "b351581e-d402-465d-b33e-c99a341adca3",
+          "incident_id": "5f7082e5-e816-414d-9e07-1c37f6e89c9a",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_ip",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "e4ffb737-96ab-456d-bb5f-6da8e6898af3",
+          "incident_id": "5f7082e5-e816-414d-9e07-1c37f6e89c9a",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "B_critical_asset_counter-oneshot_collab-1",
+      "seed": 20268874,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "B_critical_asset_counter",
+      "playbook_title": "场景B：关键资产保护触发反提案",
+      "playbook_objective": "验证执行器依据局部代价约束触发反提案",
+      "playbook_notes": "Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。",
+      "decision_elapsed_ms": 133,
+      "analysis_risk_level": "critical",
+      "analysis_base_risk_level": "critical",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "counter_proposal"
+      ],
+      "intent_status_counts": {
+        "accept": 1,
+        "counter_proposal": 1,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 0.5,
+      "counter_triggered": true,
+      "adopted_counter": true,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 1,
+      "downgrade_adopt_task_count": 1,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 1.0,
+      "intent_objectives": [
+        "block_traffic",
+        "tighten_acl"
+      ],
+      "consensus_objectives": [
+        "block_traffic",
+        "degrade_traffic"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "a74197ed-850c-45a5-ade4-3b1129b84eb2",
+          "incident_id": "6a9984f2-913d-40e5-b9f8-01569b4f35fc",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_traffic",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "93fb7fc9-fba8-43e1-99d6-0659c4e99cb9",
+          "incident_id": "6a9984f2-913d-40e5-b9f8-01569b4f35fc",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "degrade_traffic",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "B_critical_asset_counter-oneshot_collab-2",
+      "seed": 20268875,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "B_critical_asset_counter",
+      "playbook_title": "场景B：关键资产保护触发反提案",
+      "playbook_objective": "验证执行器依据局部代价约束触发反提案",
+      "playbook_notes": "Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。",
+      "decision_elapsed_ms": 149,
+      "analysis_risk_level": "critical",
+      "analysis_base_risk_level": "critical",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "counter_proposal"
+      ],
+      "intent_status_counts": {
+        "accept": 1,
+        "counter_proposal": 1,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 0.5,
+      "counter_triggered": true,
+      "adopted_counter": true,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 1,
+      "downgrade_adopt_task_count": 1,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 1.0,
+      "intent_objectives": [
+        "block_traffic",
+        "tighten_acl"
+      ],
+      "consensus_objectives": [
+        "block_traffic",
+        "degrade_traffic"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "89c70f95-ad5e-4a24-a181-e4b7ccbae801",
+          "incident_id": "95a8c287-4e16-41d4-80a1-dbf77aee0a33",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_traffic",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "16108047-7d77-4704-9936-751e6aa19e87",
+          "incident_id": "95a8c287-4e16-41d4-80a1-dbf77aee0a33",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "degrade_traffic",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "B_critical_asset_counter-oneshot_collab-3",
+      "seed": 20268876,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "B_critical_asset_counter",
+      "playbook_title": "场景B：关键资产保护触发反提案",
+      "playbook_objective": "验证执行器依据局部代价约束触发反提案",
+      "playbook_notes": "Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。",
+      "decision_elapsed_ms": 140,
+      "analysis_risk_level": "critical",
+      "analysis_base_risk_level": "critical",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "counter_proposal"
+      ],
+      "intent_status_counts": {
+        "accept": 1,
+        "counter_proposal": 1,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 0.5,
+      "counter_triggered": true,
+      "adopted_counter": true,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 1,
+      "downgrade_adopt_task_count": 1,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 1.0,
+      "intent_objectives": [
+        "block_traffic",
+        "tighten_acl"
+      ],
+      "consensus_objectives": [
+        "block_traffic",
+        "degrade_traffic"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "b98417e1-1e5f-494e-9e58-c096bc69cc7c",
+          "incident_id": "c6299da5-36e2-4e82-b46b-2b92abb402cc",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_traffic",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "bf6b6c41-a0f1-4d3e-b8ca-1cf77d06da59",
+          "incident_id": "c6299da5-36e2-4e82-b46b-2b92abb402cc",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "degrade_traffic",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "B_critical_asset_counter-oneshot_collab-4",
+      "seed": 20268877,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "B_critical_asset_counter",
+      "playbook_title": "场景B：关键资产保护触发反提案",
+      "playbook_objective": "验证执行器依据局部代价约束触发反提案",
+      "playbook_notes": "Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。",
+      "decision_elapsed_ms": 138,
+      "analysis_risk_level": "critical",
+      "analysis_base_risk_level": "critical",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "counter_proposal"
+      ],
+      "intent_status_counts": {
+        "accept": 1,
+        "counter_proposal": 1,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 0.5,
+      "counter_triggered": true,
+      "adopted_counter": true,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 1,
+      "downgrade_adopt_task_count": 1,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 1.0,
+      "intent_objectives": [
+        "block_traffic",
+        "tighten_acl"
+      ],
+      "consensus_objectives": [
+        "block_traffic",
+        "degrade_traffic"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "6359b98e-bfad-4e3b-865c-0bed201e8850",
+          "incident_id": "7e53c0f2-5c8d-413e-9c34-6a22a42f6407",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_traffic",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "0330e31a-a2cf-4b78-972e-1d3652a35070",
+          "incident_id": "7e53c0f2-5c8d-413e-9c34-6a22a42f6407",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "degrade_traffic",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "B_critical_asset_counter-oneshot_collab-5",
+      "seed": 20268878,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "B_critical_asset_counter",
+      "playbook_title": "场景B：关键资产保护触发反提案",
+      "playbook_objective": "验证执行器依据局部代价约束触发反提案",
+      "playbook_notes": "Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。",
+      "decision_elapsed_ms": 156,
+      "analysis_risk_level": "critical",
+      "analysis_base_risk_level": "critical",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "counter_proposal"
+      ],
+      "intent_status_counts": {
+        "accept": 1,
+        "counter_proposal": 1,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 0.5,
+      "counter_triggered": true,
+      "adopted_counter": true,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 1,
+      "downgrade_adopt_task_count": 1,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 1.0,
+      "intent_objectives": [
+        "block_traffic",
+        "tighten_acl"
+      ],
+      "consensus_objectives": [
+        "block_traffic",
+        "degrade_traffic"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "03992654-895a-4c77-a68e-758a80ec5256",
+          "incident_id": "8d253ea3-36b1-49a5-bde4-05adf47b0b13",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_traffic",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "9165ad2d-ba1c-496b-a78d-ecb2baf57643",
+          "incident_id": "8d253ea3-36b1-49a5-bde4-05adf47b0b13",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "degrade_traffic",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "C_budget_exhaustion-oneshot_collab-1",
+      "seed": 20263403,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "C_budget_exhaustion",
+      "playbook_title": "场景C：资源受限协同",
+      "playbook_objective": "验证资源预算耗尽时系统仍能给出兜底决策",
+      "playbook_notes": "先耗尽 office 的 block 预算，再注入攻击。",
+      "decision_elapsed_ms": 131,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "counter_proposal",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 1,
+        "counter_proposal": 1,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 0.5,
+      "counter_triggered": true,
+      "adopted_counter": true,
+      "fallback_task_count": 1,
+      "fallback_triggered": true,
+      "downgrade_counter_task_count": 1,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "raise_monitoring",
+        "raise_monitoring"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "e1ce780c-be0f-4326-b3b7-89f6cae54f1c",
+          "incident_id": "99015a6f-5a41-4eda-b4ea-1b5858856908",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "c7179147-898f-467e-b9df-17d76af26984",
+          "incident_id": "99015a6f-5a41-4eda-b4ea-1b5858856908",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "C_budget_exhaustion-oneshot_collab-2",
+      "seed": 20263404,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "C_budget_exhaustion",
+      "playbook_title": "场景C：资源受限协同",
+      "playbook_objective": "验证资源预算耗尽时系统仍能给出兜底决策",
+      "playbook_notes": "先耗尽 office 的 block 预算，再注入攻击。",
+      "decision_elapsed_ms": 133,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "counter_proposal",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 1,
+        "counter_proposal": 1,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 0.5,
+      "counter_triggered": true,
+      "adopted_counter": true,
+      "fallback_task_count": 1,
+      "fallback_triggered": true,
+      "downgrade_counter_task_count": 1,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "raise_monitoring",
+        "raise_monitoring"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "e6eb583c-6da1-4bcd-9c6d-0adc51ffaf27",
+          "incident_id": "3cc56cc2-c75a-46aa-83e8-53308effbd26",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "f5a0897e-12a6-4a75-a9eb-f08bd1a8de8c",
+          "incident_id": "3cc56cc2-c75a-46aa-83e8-53308effbd26",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "C_budget_exhaustion-oneshot_collab-3",
+      "seed": 20263405,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "C_budget_exhaustion",
+      "playbook_title": "场景C：资源受限协同",
+      "playbook_objective": "验证资源预算耗尽时系统仍能给出兜底决策",
+      "playbook_notes": "先耗尽 office 的 block 预算，再注入攻击。",
+      "decision_elapsed_ms": 153,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "counter_proposal",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 1,
+        "counter_proposal": 1,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 0.5,
+      "counter_triggered": true,
+      "adopted_counter": true,
+      "fallback_task_count": 1,
+      "fallback_triggered": true,
+      "downgrade_counter_task_count": 1,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "raise_monitoring",
+        "raise_monitoring"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "d3e52b20-a21d-439e-bd3f-8b6d9de00ab4",
+          "incident_id": "cf127395-5d1f-448e-b2f5-b644fcae4d76",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "e1a4a141-a291-4a46-9ece-ea99fa2e211a",
+          "incident_id": "cf127395-5d1f-448e-b2f5-b644fcae4d76",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "C_budget_exhaustion-oneshot_collab-4",
+      "seed": 20263406,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "C_budget_exhaustion",
+      "playbook_title": "场景C：资源受限协同",
+      "playbook_objective": "验证资源预算耗尽时系统仍能给出兜底决策",
+      "playbook_notes": "先耗尽 office 的 block 预算，再注入攻击。",
+      "decision_elapsed_ms": 145,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "counter_proposal",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 1,
+        "counter_proposal": 1,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 0.5,
+      "counter_triggered": true,
+      "adopted_counter": true,
+      "fallback_task_count": 1,
+      "fallback_triggered": true,
+      "downgrade_counter_task_count": 1,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "raise_monitoring",
+        "raise_monitoring"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "a240ec0f-767c-4a87-b555-3a23473f042b",
+          "incident_id": "50d6d03d-6f8f-45ba-be89-09c3ff13b735",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "121f465a-a6ce-4fd1-b6bf-ccae7e0bfbfc",
+          "incident_id": "50d6d03d-6f8f-45ba-be89-09c3ff13b735",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "C_budget_exhaustion-oneshot_collab-5",
+      "seed": 20263407,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "C_budget_exhaustion",
+      "playbook_title": "场景C：资源受限协同",
+      "playbook_objective": "验证资源预算耗尽时系统仍能给出兜底决策",
+      "playbook_notes": "先耗尽 office 的 block 预算，再注入攻击。",
+      "decision_elapsed_ms": 137,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "counter_proposal",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 1,
+        "counter_proposal": 1,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 0.5,
+      "counter_triggered": true,
+      "adopted_counter": true,
+      "fallback_task_count": 1,
+      "fallback_triggered": true,
+      "downgrade_counter_task_count": 1,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "raise_monitoring",
+        "raise_monitoring"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "6503939f-4486-4e71-9274-58f87e3ad717",
+          "incident_id": "f9465719-eb5d-46e8-993e-8f7631235fe6",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "18cc8a30-5c98-42fa-8ddd-6df8034b61b6",
+          "incident_id": "f9465719-eb5d-46e8-993e-8f7631235fe6",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "D_cross_domain_weak_signal-oneshot_collab-1",
+      "seed": 20267825,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "D_cross_domain_weak_signal",
+      "playbook_title": "场景D：跨域弱信号融合",
+      "playbook_objective": "验证低危弱信号在协同时可被识别，降低漏报",
+      "playbook_notes": "单域低危均可忽略，跨域关联后触发全局升级。",
+      "decision_elapsed_ms": 149,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "medium",
+      "analysis_domain_weight_factor": 0.6,
+      "analysis_domain_weight_calibrated": true,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "abef44df-660b-43c6-9e77-b6d38bc26500",
+          "incident_id": "7de37a21-044e-40d4-84e0-9b78044dcbe5",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_ip",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "a456e41c-a569-4492-86f2-21ba6debd362",
+          "incident_id": "7de37a21-044e-40d4-84e0-9b78044dcbe5",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "D_cross_domain_weak_signal-oneshot_collab-2",
+      "seed": 20267826,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "D_cross_domain_weak_signal",
+      "playbook_title": "场景D：跨域弱信号融合",
+      "playbook_objective": "验证低危弱信号在协同时可被识别，降低漏报",
+      "playbook_notes": "单域低危均可忽略，跨域关联后触发全局升级。",
+      "decision_elapsed_ms": 133,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "medium",
+      "analysis_domain_weight_factor": 0.6,
+      "analysis_domain_weight_calibrated": true,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "9373ae77-22df-4bd4-8466-5b09dd921643",
+          "incident_id": "e9505cc7-b1a7-4a2e-9f16-be686a610d05",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_ip",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "376d3aa2-4fdd-49e8-976e-5e8fdfc0a1ff",
+          "incident_id": "e9505cc7-b1a7-4a2e-9f16-be686a610d05",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "D_cross_domain_weak_signal-oneshot_collab-3",
+      "seed": 20267827,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "D_cross_domain_weak_signal",
+      "playbook_title": "场景D：跨域弱信号融合",
+      "playbook_objective": "验证低危弱信号在协同时可被识别，降低漏报",
+      "playbook_notes": "单域低危均可忽略，跨域关联后触发全局升级。",
+      "decision_elapsed_ms": 134,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "medium",
+      "analysis_domain_weight_factor": 0.6,
+      "analysis_domain_weight_calibrated": true,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "f9247927-7d08-44bf-b435-7908b8fdd8f8",
+          "incident_id": "b9cc3e02-b6f5-4ceb-b4d9-0d3818aa8c18",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_ip",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "e9f5721d-f24c-4886-8597-a81eec385249",
+          "incident_id": "b9cc3e02-b6f5-4ceb-b4d9-0d3818aa8c18",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "D_cross_domain_weak_signal-oneshot_collab-4",
+      "seed": 20267828,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "D_cross_domain_weak_signal",
+      "playbook_title": "场景D：跨域弱信号融合",
+      "playbook_objective": "验证低危弱信号在协同时可被识别，降低漏报",
+      "playbook_notes": "单域低危均可忽略，跨域关联后触发全局升级。",
+      "decision_elapsed_ms": 149,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "medium",
+      "analysis_domain_weight_factor": 0.6,
+      "analysis_domain_weight_calibrated": true,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "81dd7847-a5fc-465c-bbea-3514f34e1890",
+          "incident_id": "8080f7a7-646c-4ff7-8af9-5a49be14ac3b",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_ip",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "c2dbf7fc-1c47-4312-8e9a-11edb85cb912",
+          "incident_id": "8080f7a7-646c-4ff7-8af9-5a49be14ac3b",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "D_cross_domain_weak_signal-oneshot_collab-5",
+      "seed": 20267829,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "D_cross_domain_weak_signal",
+      "playbook_title": "场景D：跨域弱信号融合",
+      "playbook_objective": "验证低危弱信号在协同时可被识别，降低漏报",
+      "playbook_notes": "单域低危均可忽略，跨域关联后触发全局升级。",
+      "decision_elapsed_ms": 127,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "medium",
+      "analysis_domain_weight_factor": 0.6,
+      "analysis_domain_weight_calibrated": true,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "false_negative": 0,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": false,
+      "attack_success_rate": 0.0,
+      "lateral_spread_count": 1,
+      "containment_time_ms": 49,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement"
+      ],
+      "final_stage": "lateral_movement",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "27c631b4-43ed-42e2-80df-2d95f4be9c2f",
+          "incident_id": "d1eb98af-acae-4c15-9391-59e0ec6796f3",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "block_ip",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "89a87d3e-9c06-4763-a98e-ca04a837f64f",
+          "incident_id": "d1eb98af-acae-4c15-9391-59e0ec6796f3",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 1.0
+    },
+    {
+      "run_id": "E_false_positive_noise-oneshot_collab-1",
+      "seed": 20266376,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "E_false_positive_noise",
+      "playbook_title": "场景E：误报拦截（纯噪音）",
+      "playbook_objective": "验证协同可识别低置信度跨域噪音并拒绝阻断",
+      "playbook_notes": "注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+      "decision_elapsed_ms": 140,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.75,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": true,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 1,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "raise_monitoring"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 1.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "a7d47aaa-be00-46f6-bbb5-284e88e359e5",
+          "incident_id": "86e8980e-d689-4273-8f6d-4b32988dbe67",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "8f40e3ea-3f8b-4d89-bb5b-1f33a91b21a3",
+          "incident_id": "86e8980e-d689-4273-8f6d-4b32988dbe67",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "E_false_positive_noise-oneshot_collab-2",
+      "seed": 20266377,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "E_false_positive_noise",
+      "playbook_title": "场景E：误报拦截（纯噪音）",
+      "playbook_objective": "验证协同可识别低置信度跨域噪音并拒绝阻断",
+      "playbook_notes": "注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+      "decision_elapsed_ms": 151,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.75,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": true,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 1,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "raise_monitoring"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 1.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "b446c966-98f1-4e39-a997-aa843c75f37f",
+          "incident_id": "74cd4d2e-88cf-4990-a6db-58bf869916db",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "f591427c-6ca8-4335-942c-48bfcd0752ea",
+          "incident_id": "74cd4d2e-88cf-4990-a6db-58bf869916db",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "E_false_positive_noise-oneshot_collab-3",
+      "seed": 20266378,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "E_false_positive_noise",
+      "playbook_title": "场景E：误报拦截（纯噪音）",
+      "playbook_objective": "验证协同可识别低置信度跨域噪音并拒绝阻断",
+      "playbook_notes": "注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+      "decision_elapsed_ms": 138,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.75,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": true,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 1,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "raise_monitoring"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 1.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "16b881f8-bd6d-42d6-9147-e985ea1618fd",
+          "incident_id": "ec7407fe-860f-4938-bd6a-15afda5e9db5",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "5369db8a-308e-4207-b97f-78a6a8262e56",
+          "incident_id": "ec7407fe-860f-4938-bd6a-15afda5e9db5",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "E_false_positive_noise-oneshot_collab-4",
+      "seed": 20266379,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "E_false_positive_noise",
+      "playbook_title": "场景E：误报拦截（纯噪音）",
+      "playbook_objective": "验证协同可识别低置信度跨域噪音并拒绝阻断",
+      "playbook_notes": "注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+      "decision_elapsed_ms": 135,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.75,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": true,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 1,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "raise_monitoring"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 1.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "8dd711df-b4c3-4418-a14f-246170462c65",
+          "incident_id": "32170bb0-cf39-4ee6-b8c3-bd466ba47e1b",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "c045440b-7fa9-4bc8-a595-a04954b00843",
+          "incident_id": "32170bb0-cf39-4ee6-b8c3-bd466ba47e1b",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "E_false_positive_noise-oneshot_collab-5",
+      "seed": 20266380,
+      "mode": "oneshot_collab",
+      "collaboration_enabled": true,
+      "playbook_id": "E_false_positive_noise",
+      "playbook_title": "场景E：误报拦截（纯噪音）",
+      "playbook_objective": "验证协同可识别低置信度跨域噪音并拒绝阻断",
+      "playbook_notes": "注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+      "decision_elapsed_ms": 141,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.75,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": true,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 1,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "block_ip",
+        "raise_monitoring"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "raise_monitoring"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 1.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "cf2f7a40-cd72-425e-b8f4-4c2c0e52a2d3",
+          "incident_id": "d1dfb6fa-988c-4791-880a-1143ad87c841",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "fe3611a1-5400-40e9-979a-7bc7b9edffbe",
+          "incident_id": "d1dfb6fa-988c-4791-880a-1143ad87c841",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "raise_monitoring",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "A_happy_path-no_collab-1",
+      "seed": 20260567,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "A_happy_path",
+      "playbook_title": "场景A：无分歧协同（Happy Path）",
+      "playbook_objective": "验证协商链路闭环与可接受时延",
+      "playbook_notes": "普通资产，不触发关键资产保护或资源约束。",
+      "decision_elapsed_ms": 131,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "e86e63f7-4211-4aa3-9912-2be4ff373142",
+          "incident_id": "421c2f41-f0e7-4878-be94-6fe82bb4ec5e",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "a7c549d4-3c1b-4a55-ad62-5db1d3aa867d",
+          "incident_id": "421c2f41-f0e7-4878-be94-6fe82bb4ec5e",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "A_happy_path-no_collab-2",
+      "seed": 20260568,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "A_happy_path",
+      "playbook_title": "场景A：无分歧协同（Happy Path）",
+      "playbook_objective": "验证协商链路闭环与可接受时延",
+      "playbook_notes": "普通资产，不触发关键资产保护或资源约束。",
+      "decision_elapsed_ms": 146,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "86ed47c3-c899-4b8e-9add-e68c9a86f31f",
+          "incident_id": "85f9423b-3a2a-4475-88e4-3eae7a7c3f2a",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "2f9316ca-31cc-4fef-94eb-3dfb98240890",
+          "incident_id": "85f9423b-3a2a-4475-88e4-3eae7a7c3f2a",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "A_happy_path-no_collab-3",
+      "seed": 20260569,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "A_happy_path",
+      "playbook_title": "场景A：无分歧协同（Happy Path）",
+      "playbook_objective": "验证协商链路闭环与可接受时延",
+      "playbook_notes": "普通资产，不触发关键资产保护或资源约束。",
+      "decision_elapsed_ms": 152,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "ce653aa4-a61c-4d21-b90a-220eb727c2d0",
+          "incident_id": "e9997608-7742-4f9c-a137-bb6085ff529d",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "bf40c439-371b-4473-bfe4-23f0e918d762",
+          "incident_id": "e9997608-7742-4f9c-a137-bb6085ff529d",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "A_happy_path-no_collab-4",
+      "seed": 20260570,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "A_happy_path",
+      "playbook_title": "场景A：无分歧协同（Happy Path）",
+      "playbook_objective": "验证协商链路闭环与可接受时延",
+      "playbook_notes": "普通资产，不触发关键资产保护或资源约束。",
+      "decision_elapsed_ms": 132,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "1195b452-b33b-473e-a286-fbecc354eea5",
+          "incident_id": "69e2c8d1-c4e3-4dbe-9c88-5b06d5be4399",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "e8f566bd-447f-4d3b-acd3-35d53c5cf8b7",
+          "incident_id": "69e2c8d1-c4e3-4dbe-9c88-5b06d5be4399",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "A_happy_path-no_collab-5",
+      "seed": 20260571,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "A_happy_path",
+      "playbook_title": "场景A：无分歧协同（Happy Path）",
+      "playbook_objective": "验证协商链路闭环与可接受时延",
+      "playbook_notes": "普通资产，不触发关键资产保护或资源约束。",
+      "decision_elapsed_ms": 143,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "3bbfac83-54d9-463e-9b02-fbf04a8e3a00",
+          "incident_id": "65be3481-38a3-4c78-9aca-71674d2a78fe",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "958bd50d-331b-4736-9435-6a8bb2dbb302",
+          "incident_id": "65be3481-38a3-4c78-9aca-71674d2a78fe",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "B_critical_asset_counter-no_collab-1",
+      "seed": 20268910,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "B_critical_asset_counter",
+      "playbook_title": "场景B：关键资产保护触发反提案",
+      "playbook_objective": "验证执行器依据局部代价约束触发反提案",
+      "playbook_notes": "Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。",
+      "decision_elapsed_ms": 149,
+      "analysis_risk_level": "critical",
+      "analysis_base_risk_level": "critical",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "7127d515-f557-45e1-8146-3f9ee71d77d5",
+          "incident_id": "63924538-9cf7-4336-a31d-808dd83f0c43",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "9222772b-e4ac-452c-9948-6b984af160b6",
+          "incident_id": "63924538-9cf7-4336-a31d-808dd83f0c43",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "B_critical_asset_counter-no_collab-2",
+      "seed": 20268911,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "B_critical_asset_counter",
+      "playbook_title": "场景B：关键资产保护触发反提案",
+      "playbook_objective": "验证执行器依据局部代价约束触发反提案",
+      "playbook_notes": "Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。",
+      "decision_elapsed_ms": 137,
+      "analysis_risk_level": "critical",
+      "analysis_base_risk_level": "critical",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "3a356509-523a-4fdc-827f-b45ab8ec1071",
+          "incident_id": "2f5f2200-6416-4b5a-9c89-a0ce864292ce",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "1ac8ffa9-b167-4467-92ce-ee2142b7d6de",
+          "incident_id": "2f5f2200-6416-4b5a-9c89-a0ce864292ce",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "B_critical_asset_counter-no_collab-3",
+      "seed": 20268912,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "B_critical_asset_counter",
+      "playbook_title": "场景B：关键资产保护触发反提案",
+      "playbook_objective": "验证执行器依据局部代价约束触发反提案",
+      "playbook_notes": "Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。",
+      "decision_elapsed_ms": 153,
+      "analysis_risk_level": "critical",
+      "analysis_base_risk_level": "critical",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "031f568d-1737-40ba-b7f2-ad861a1375fa",
+          "incident_id": "79827eb3-d562-4f90-89ea-5af5c63b0d16",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "5c74f382-4aaa-49de-bf1f-96a9c3ae09c6",
+          "incident_id": "79827eb3-d562-4f90-89ea-5af5c63b0d16",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "B_critical_asset_counter-no_collab-4",
+      "seed": 20268913,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "B_critical_asset_counter",
+      "playbook_title": "场景B：关键资产保护触发反提案",
+      "playbook_objective": "验证执行器依据局部代价约束触发反提案",
+      "playbook_notes": "Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。",
+      "decision_elapsed_ms": 143,
+      "analysis_risk_level": "critical",
+      "analysis_base_risk_level": "critical",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "031b683e-dbcd-4d8b-90fc-5927307732f9",
+          "incident_id": "206d7f5b-0769-4e9b-bb9f-3311874d2d76",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "ce07dca4-b726-4ddb-840c-373afcabddfb",
+          "incident_id": "206d7f5b-0769-4e9b-bb9f-3311874d2d76",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "B_critical_asset_counter-no_collab-5",
+      "seed": 20268914,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "B_critical_asset_counter",
+      "playbook_title": "场景B：关键资产保护触发反提案",
+      "playbook_objective": "验证执行器依据局部代价约束触发反提案",
+      "playbook_notes": "Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。",
+      "decision_elapsed_ms": 133,
+      "analysis_risk_level": "critical",
+      "analysis_base_risk_level": "critical",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "781015b0-9260-4499-a91f-8caf80020683",
+          "incident_id": "484da4f9-8fda-4677-9c5d-0df13ecac300",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "09f4cc79-19ad-4bca-93aa-63e2e3f86b21",
+          "incident_id": "484da4f9-8fda-4677-9c5d-0df13ecac300",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "C_budget_exhaustion-no_collab-1",
+      "seed": 20263439,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "C_budget_exhaustion",
+      "playbook_title": "场景C：资源受限协同",
+      "playbook_objective": "验证资源预算耗尽时系统仍能给出兜底决策",
+      "playbook_notes": "先耗尽 office 的 block 预算，再注入攻击。",
+      "decision_elapsed_ms": 143,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "229830db-d6e3-4e95-b039-426adc6ee9be",
+          "incident_id": "312dac39-386e-41b0-8eee-f16fa3315f94",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "31ba9df7-dda9-47ae-8d57-64c29fcb0f73",
+          "incident_id": "312dac39-386e-41b0-8eee-f16fa3315f94",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "C_budget_exhaustion-no_collab-2",
+      "seed": 20263440,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "C_budget_exhaustion",
+      "playbook_title": "场景C：资源受限协同",
+      "playbook_objective": "验证资源预算耗尽时系统仍能给出兜底决策",
+      "playbook_notes": "先耗尽 office 的 block 预算，再注入攻击。",
+      "decision_elapsed_ms": 141,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "0d95904a-9760-4b7d-8fc3-9506065632db",
+          "incident_id": "8ce64fe6-80a4-4f75-b530-f4476dfac69f",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "16ca2b66-a713-442a-98a6-e20743c02bb1",
+          "incident_id": "8ce64fe6-80a4-4f75-b530-f4476dfac69f",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "C_budget_exhaustion-no_collab-3",
+      "seed": 20263441,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "C_budget_exhaustion",
+      "playbook_title": "场景C：资源受限协同",
+      "playbook_objective": "验证资源预算耗尽时系统仍能给出兜底决策",
+      "playbook_notes": "先耗尽 office 的 block 预算，再注入攻击。",
+      "decision_elapsed_ms": 142,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "83471eb2-262b-4b14-bb5e-4df219b56c8c",
+          "incident_id": "f08177b9-7052-4bfc-8bbf-b58db8cbf189",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "2799f381-8892-4ad0-b5d5-49b623387cd4",
+          "incident_id": "f08177b9-7052-4bfc-8bbf-b58db8cbf189",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "C_budget_exhaustion-no_collab-4",
+      "seed": 20263442,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "C_budget_exhaustion",
+      "playbook_title": "场景C：资源受限协同",
+      "playbook_objective": "验证资源预算耗尽时系统仍能给出兜底决策",
+      "playbook_notes": "先耗尽 office 的 block 预算，再注入攻击。",
+      "decision_elapsed_ms": 154,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "87ac50ff-cb85-4689-ad8d-4b72970892b6",
+          "incident_id": "00a9a414-0e11-45eb-bcef-33bcb1351f38",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "220bd4e0-2f58-4956-84d8-19177b2588be",
+          "incident_id": "00a9a414-0e11-45eb-bcef-33bcb1351f38",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "C_budget_exhaustion-no_collab-5",
+      "seed": 20263443,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "C_budget_exhaustion",
+      "playbook_title": "场景C：资源受限协同",
+      "playbook_objective": "验证资源预算耗尽时系统仍能给出兜底决策",
+      "playbook_notes": "先耗尽 office 的 block 预算，再注入攻击。",
+      "decision_elapsed_ms": 145,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.85,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "57b3ff1e-fcec-4062-83dc-7bf19a1b48d6",
+          "incident_id": "d7e2029c-1590-4d26-bcfa-3ac622ea5890",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "2d8df2ad-85e8-4bfe-a6e7-6648904f1405",
+          "incident_id": "d7e2029c-1590-4d26-bcfa-3ac622ea5890",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "D_cross_domain_weak_signal-no_collab-1",
+      "seed": 20267861,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "D_cross_domain_weak_signal",
+      "playbook_title": "场景D：跨域弱信号融合",
+      "playbook_objective": "验证低危弱信号在协同时可被识别，降低漏报",
+      "playbook_notes": "单域低危均可忽略，跨域关联后触发全局升级。",
+      "decision_elapsed_ms": 134,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "medium",
+      "analysis_domain_weight_factor": 0.6,
+      "analysis_domain_weight_calibrated": true,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": true,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 1.0,
+      "flat_results": [
+        {
+          "task_id": "1a89822d-562c-4d8e-b9bd-25eacb2e07f3",
+          "incident_id": "aa621b3d-1037-468d-99ee-68be144784d5",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "5e0b5ead-fd7f-4641-a9dd-f3414e370c25",
+          "incident_id": "aa621b3d-1037-468d-99ee-68be144784d5",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "D_cross_domain_weak_signal-no_collab-2",
+      "seed": 20267862,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "D_cross_domain_weak_signal",
+      "playbook_title": "场景D：跨域弱信号融合",
+      "playbook_objective": "验证低危弱信号在协同时可被识别，降低漏报",
+      "playbook_notes": "单域低危均可忽略，跨域关联后触发全局升级。",
+      "decision_elapsed_ms": 145,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "medium",
+      "analysis_domain_weight_factor": 0.6,
+      "analysis_domain_weight_calibrated": true,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": true,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 1.0,
+      "flat_results": [
+        {
+          "task_id": "0d72b144-2811-45ac-b4d6-6156299bd270",
+          "incident_id": "54dd8ca8-8288-4b7b-ba53-e617f2c962a2",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "7de6ba52-2a1b-49e9-bf26-52931c9306d2",
+          "incident_id": "54dd8ca8-8288-4b7b-ba53-e617f2c962a2",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "D_cross_domain_weak_signal-no_collab-3",
+      "seed": 20267863,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "D_cross_domain_weak_signal",
+      "playbook_title": "场景D：跨域弱信号融合",
+      "playbook_objective": "验证低危弱信号在协同时可被识别，降低漏报",
+      "playbook_notes": "单域低危均可忽略，跨域关联后触发全局升级。",
+      "decision_elapsed_ms": 142,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "medium",
+      "analysis_domain_weight_factor": 0.6,
+      "analysis_domain_weight_calibrated": true,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": true,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 1.0,
+      "flat_results": [
+        {
+          "task_id": "ed1d2b93-0e38-4d7e-9d56-401954e11b32",
+          "incident_id": "3235245e-eff7-49f4-84aa-363f3da23247",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "d9bef0e1-fd49-461f-a790-77ff5d39d791",
+          "incident_id": "3235245e-eff7-49f4-84aa-363f3da23247",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "D_cross_domain_weak_signal-no_collab-4",
+      "seed": 20267864,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "D_cross_domain_weak_signal",
+      "playbook_title": "场景D：跨域弱信号融合",
+      "playbook_objective": "验证低危弱信号在协同时可被识别，降低漏报",
+      "playbook_notes": "单域低危均可忽略，跨域关联后触发全局升级。",
+      "decision_elapsed_ms": 132,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "medium",
+      "analysis_domain_weight_factor": 0.6,
+      "analysis_domain_weight_calibrated": true,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": true,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 1.0,
+      "flat_results": [
+        {
+          "task_id": "db886216-e328-4df2-929a-89880163c650",
+          "incident_id": "c1afd4fe-09fb-4251-a462-5efb80a8bdb1",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "25d6ae96-806a-41a3-88d8-17702fc1cc5c",
+          "incident_id": "c1afd4fe-09fb-4251-a462-5efb80a8bdb1",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "D_cross_domain_weak_signal-no_collab-5",
+      "seed": 20267865,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "D_cross_domain_weak_signal",
+      "playbook_title": "场景D：跨域弱信号融合",
+      "playbook_objective": "验证低危弱信号在协同时可被识别，降低漏报",
+      "playbook_notes": "单域低危均可忽略，跨域关联后触发全局升级。",
+      "decision_elapsed_ms": 144,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "medium",
+      "analysis_domain_weight_factor": 0.6,
+      "analysis_domain_weight_calibrated": true,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": true,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 1.0,
+      "flat_results": [
+        {
+          "task_id": "64b19e1f-06db-42af-acca-fa2a013399cd",
+          "incident_id": "8d3a6cbb-1237-4613-8874-43e58ba63ee0",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "0ecc2b64-729b-42ff-bab7-514faca44908",
+          "incident_id": "8d3a6cbb-1237-4613-8874-43e58ba63ee0",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "E_false_positive_noise-no_collab-1",
+      "seed": 20266412,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "E_false_positive_noise",
+      "playbook_title": "场景E：误报拦截（纯噪音）",
+      "playbook_objective": "验证协同可识别低置信度跨域噪音并拒绝阻断",
+      "playbook_notes": "注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+      "decision_elapsed_ms": 162,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.75,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 1.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "3fa7618d-4643-4cd9-b9d0-d70cad05d324",
+          "incident_id": "204d46df-31da-4ab4-a162-827163c91744",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "67951c8c-2e9a-46ae-af94-f4477330991c",
+          "incident_id": "204d46df-31da-4ab4-a162-827163c91744",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "E_false_positive_noise-no_collab-2",
+      "seed": 20266413,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "E_false_positive_noise",
+      "playbook_title": "场景E：误报拦截（纯噪音）",
+      "playbook_objective": "验证协同可识别低置信度跨域噪音并拒绝阻断",
+      "playbook_notes": "注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+      "decision_elapsed_ms": 142,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.75,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 1.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "a4baa151-3b4e-4d8b-88bf-def1acbad390",
+          "incident_id": "63e92780-9b48-43ba-98d9-1f990c06cc48",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "3226d6d7-e171-4e90-b154-81126f5e679c",
+          "incident_id": "63e92780-9b48-43ba-98d9-1f990c06cc48",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "E_false_positive_noise-no_collab-3",
+      "seed": 20266414,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "E_false_positive_noise",
+      "playbook_title": "场景E：误报拦截（纯噪音）",
+      "playbook_objective": "验证协同可识别低置信度跨域噪音并拒绝阻断",
+      "playbook_notes": "注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+      "decision_elapsed_ms": 143,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.75,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 1.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "aaf00791-51a2-4cab-849d-1cafbe3edb42",
+          "incident_id": "11d0699d-78c9-4aa1-8337-416d86108ee1",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "6e44d62c-a147-4c47-bf0a-4bec95695ddd",
+          "incident_id": "11d0699d-78c9-4aa1-8337-416d86108ee1",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "E_false_positive_noise-no_collab-4",
+      "seed": 20266415,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "E_false_positive_noise",
+      "playbook_title": "场景E：误报拦截（纯噪音）",
+      "playbook_objective": "验证协同可识别低置信度跨域噪音并拒绝阻断",
+      "playbook_notes": "注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+      "decision_elapsed_ms": 153,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.75,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 1.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "f85f4210-d14d-4264-b583-fb4e54695d35",
+          "incident_id": "88762ce0-1bb0-4972-bb63-024b8a312c0e",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "cc08eade-d29e-4096-a141-7f98f6062897",
+          "incident_id": "88762ce0-1bb0-4972-bb63-024b8a312c0e",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    },
+    {
+      "run_id": "E_false_positive_noise-no_collab-5",
+      "seed": 20266416,
+      "mode": "no_collab",
+      "collaboration_enabled": false,
+      "playbook_id": "E_false_positive_noise",
+      "playbook_title": "场景E：误报拦截（纯噪音）",
+      "playbook_objective": "验证协同可识别低置信度跨域噪音并拒绝阻断",
+      "playbook_notes": "注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+      "decision_elapsed_ms": 141,
+      "analysis_risk_level": "high",
+      "analysis_base_risk_level": "high",
+      "analysis_domain_weight_factor": 0.75,
+      "analysis_domain_weight_calibrated": false,
+      "intent_statuses": [
+        "accept",
+        "accept"
+      ],
+      "intent_status_counts": {
+        "accept": 2,
+        "counter_proposal": 0,
+        "reject": 0,
+        "other": 0
+      },
+      "consensus_statuses": [
+        "completed",
+        "completed"
+      ],
+      "max_rounds": 1,
+      "timeout_ms": 3000,
+      "intent_accept_rate": 1.0,
+      "counter_triggered": false,
+      "adopted_counter": false,
+      "fallback_task_count": 0,
+      "fallback_triggered": false,
+      "downgrade_counter_task_count": 0,
+      "downgrade_adopt_task_count": 0,
+      "low_confidence_reject_task_count": 0,
+      "downgrade_adoption_rate": 0.0,
+      "intent_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "consensus_objectives": [
+        "observe_alert",
+        "observe_alert"
+      ],
+      "false_negative": 1,
+      "weak_signal_missed_detection": false,
+      "tasks": 2,
+      "success": 2,
+      "task_success_rate": 1.0,
+      "avg_latency_ms": 80,
+      "domain_stats": {
+        "office": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 49,
+          "success_rate": 1.0
+        },
+        "core": {
+          "tasks": 1,
+          "success": 1,
+          "avg_latency_ms": 112,
+          "success_rate": 1.0
+        }
+      },
+      "attack_success": true,
+      "attack_success_rate": 1.0,
+      "lateral_spread_count": 3,
+      "containment_time_ms": 0,
+      "reached_stages": [
+        "initial_access",
+        "recon",
+        "lateral_movement",
+        "core_pivot",
+        "impact"
+      ],
+      "final_stage": "impact",
+      "false_positive_rate": 1.0,
+      "false_negative_rate": 0.0,
+      "flat_results": [
+        {
+          "task_id": "d6c23ce8-43c8-4a6e-9a3e-02b3e84bf404",
+          "incident_id": "0422881f-24db-4320-85d5-3476f3bb20e0",
+          "executor": "executor-office",
+          "domain": "office",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 49,
+          "error": null
+        },
+        {
+          "task_id": "3c8e9dc9-4cb0-40f4-b17b-bdfc1ff823bc",
+          "incident_id": "0422881f-24db-4320-85d5-3476f3bb20e0",
+          "executor": "executor-core",
+          "domain": "core",
+          "objective": "observe_alert",
+          "status": "completed",
+          "success": true,
+          "latency_ms": 112,
+          "error": null
+        }
+      ],
+      "block_rate": 0.0
+    }
+  ],
+  "reproducibility": {
+    "seed": 20260325,
+    "runs_per_playbook": 5,
+    "playbook_jitter_ms": 120,
+    "inter_event_sleep_jitter_ms": 60,
+    "manager_service": "http://manager:8000",
+    "office_executor_service": "http://executor_office:8101",
+    "core_executor_service": "http://executor_core:8102",
+    "modes": [
+      "oneshot_collab",
+      "no_collab"
+    ]
+  }
+}

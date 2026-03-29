@@ -502,9 +502,22 @@ def _collect_negotiation_feedback(dispatch_results: List[Dict[str, Any]]) -> Dic
 def _refine_consensus_payload(
     intent_payload: TaskPayload,
     feedback: Dict[str, Dict[str, Any]],
-    global_risk_level: str,
+    analysis: Dict[str, Any],
 ) -> TaskPayload:
     refined_tasks: List[TaskItem] = []
+    global_risk_level = str(analysis.get("risk_level", "low"))
+    confidence_global = str(analysis.get("confidence_global", analysis.get("confidence", "low"))).lower()
+    dominant_attack = str(analysis.get("attack_pattern", "")).lower()
+    incident_graph = analysis.get("incident_graph", {}) if isinstance(analysis.get("incident_graph"), dict) else {}
+    edge_count = int(incident_graph.get("summary", {}).get("edge_count", 0)) if isinstance(incident_graph, dict) else 0
+    weak_cross_domain_evidence = (
+        bool(analysis.get("is_cross_domain_attack", False))
+        and edge_count == 0
+        and confidence_global in {"low", "medium"}
+        and dominant_attack == "port_scan"
+    )
+    blocking_objectives = {"block_ip", "block_traffic", "tighten_acl", "isolate_host", "enable_ids_strict"}
+
     base_min_gain = _risk_min_gain(global_risk_level)
     min_confidence = _min_confidence_for_downgrade()
     low_confidence_gain_bonus = _low_confidence_extra_gain()
@@ -529,7 +542,10 @@ def _refine_consensus_payload(
         final_objective = task.objective
         final_reason = "accepted_intent"
         # 一轮协商后强制终裁：要么采纳反提案，要么执行兜底策略。
-        if status in {"counter_proposal", "reject"}:
+        if weak_cross_domain_evidence and str(task.objective) in blocking_objectives:
+            final_objective = "observe_alert"
+            final_reason = "reject_block_low_confidence"
+        elif status in {"counter_proposal", "reject"}:
             if suggested and suggested_gain >= effective_min_gain:
                 final_objective = suggested
                 final_reason = "adopt_counter_proposal"
@@ -552,6 +568,9 @@ def _refine_consensus_payload(
         constraints["counter_is_downgrade"] = bool(is_downgrade)
         constraints["low_confidence_penalty_applied"] = bool(is_downgrade and confidence < min_confidence)
         constraints["fallback_action"] = final_objective if final_reason == "fallback_min_gain_policy" else ""
+        constraints["low_confidence_block_reject"] = bool(final_reason == "reject_block_low_confidence")
+        constraints["global_confidence"] = confidence_global
+        constraints["cross_domain_edge_count"] = edge_count
 
         refined_tasks.append(
             TaskItem(
@@ -627,7 +646,7 @@ async def decision_trigger(request: DecisionTriggerRequest) -> Dict[str, Any]:
     consensus_payload = _refine_consensus_payload(
         intent_payload,
         feedback,
-        global_risk_level=str(analysis.get("risk_level", "low")),
+        analysis=analysis,
     )
     consensus_dispatch = await _dispatch_tasks(consensus_payload, message_type=MessageType.CONSENSUS)
 

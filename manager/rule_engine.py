@@ -80,7 +80,7 @@ class RuleEngine:
         medium = sev.get("medium", 0)
         if critical >= 1 or high >= 2:
             return "high"
-        if high >= 1 or medium >= 2:
+        if high >= 1 or medium >= 1:
             return "medium"
         return "low"
 
@@ -165,11 +165,14 @@ class RuleEngine:
         levels = list(domain_levels.values())
         cross_domain = len(domain_levels) >= 2
         has_high = any(level == "high" for level in levels)
+        has_medium = any(level == "medium" for level in levels)
 
         if cross_domain and edge_count >= 1 and has_high:
             return "critical", "high"
+        if cross_domain and edge_count >= 1 and has_medium:
+            return "medium", "high"
         if cross_domain and edge_count >= 1:
-            return "high", "high"
+            return "medium", "medium"
         if cross_domain and has_high:
             return "high", "medium"
         if has_high:
