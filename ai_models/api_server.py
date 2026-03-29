@@ -3,9 +3,13 @@ from __future__ import annotations
 import os
 import asyncio
 from collections import defaultdict
+<<<<<<< HEAD
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 from uuid import uuid4
+=======
+from typing import Any, Dict, List
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -21,7 +25,10 @@ _rule_engine = _models["rule_engine"]
 _decision_tree = _models["decision_tree"]
 _api_client = AsyncAPIClient(timeout=20.0)
 _received_alerts: List[Dict[str, Any]] = []
+<<<<<<< HEAD
 _incidents: Dict[str, Dict[str, Any]] = {}
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
 
 _executor_endpoints = {
     "office": os.getenv("EXECUTOR_OFFICE_SERVICE", "http://127.0.0.1:8101"),
@@ -34,6 +41,7 @@ class DecisionTriggerRequest(BaseModel):
     clear_alerts: bool = True
 
 
+<<<<<<< HEAD
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -138,6 +146,8 @@ def _ooda_metrics() -> Dict[str, Any]:
     }
 
 
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
 def _normalize_alert(payload: Dict[str, Any]) -> Dict[str, Any]:
     if payload.get("message_type") == MessageType.ALERT.value and isinstance(payload.get("payload"), dict):
         normalized = dict(payload["payload"])
@@ -160,11 +170,16 @@ def _pick_objective(playbook: List[str], enforce_actions: bool, has_ip: bool) ->
     return "observe_alert"
 
 
+<<<<<<< HEAD
 def _collect_domain_context(alerts: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+=======
+def _build_task_payload(alerts: List[Dict[str, Any]], strategy: Dict[str, Any], enforce_actions: bool) -> TaskPayload:
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
     grouped: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
     for alert in alerts:
         grouped[alert.get("domain", "unknown")].append(alert)
 
+<<<<<<< HEAD
     context: Dict[str, Dict[str, Any]] = {}
     for domain, domain_alerts in grouped.items():
         first = domain_alerts[0] if domain_alerts else {}
@@ -184,10 +199,13 @@ def _build_task_payload(
 ) -> TaskPayload:
     domain_context = _collect_domain_context(alerts)
 
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
     tasks: List[TaskItem] = []
     playbook = strategy.get("playbook", [])
     priority = int(strategy.get("priority", 5))
     strategy_name = strategy.get("strategy", "unknown")
+<<<<<<< HEAD
     incident_type = strategy.get("incident_type", "none")
     joint_plan = strategy.get("joint_plan", [])
 
@@ -248,6 +266,23 @@ def _build_task_payload(
                     "target_domain": domain,
                     "enforce_actions": enforce_actions,
                     "incident_type": incident_type,
+=======
+
+    for domain, domain_alerts in grouped.items():
+        src_ip = domain_alerts[0].get("src_ip") if domain_alerts else None
+        objective = _pick_objective(playbook, enforce_actions=enforce_actions, has_ip=bool(src_ip))
+        hints = ["enforce" if enforce_actions else "observe_only", f"strategy:{strategy_name}"]
+
+        tasks.append(
+            TaskItem(
+                objective=objective,
+                target_domain=domain,
+                priority=priority,
+                action_hints=hints,
+                constraints={
+                    "ip": src_ip,
+                    "enforce_actions": enforce_actions,
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
                     "attack_pattern": strategy.get("pattern", "unknown"),
                 },
             )
@@ -328,12 +363,16 @@ async def _dispatch_tasks(task_payload: TaskPayload) -> List[Dict[str, Any]]:
 
 @app.get("/health")
 async def health() -> Dict[str, Any]:
+<<<<<<< HEAD
     return {
         "status": "ok",
         "role": "manager",
         "alert_buffer_size": len(_received_alerts),
         "ooda": _ooda_metrics(),
     }
+=======
+    return {"status": "ok", "role": "manager", "alert_buffer_size": len(_received_alerts)}
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
 
 
 @app.post("/alerts")
@@ -349,6 +388,7 @@ async def decision_trigger(request: DecisionTriggerRequest) -> Dict[str, Any]:
     alert_sources = sorted({a.get("alert_source", "unknown") for a in alerts_snapshot})
     analysis = _rule_engine.evaluate(alerts_snapshot)
     decision = _decision_tree.choose_strategy(analysis)
+<<<<<<< HEAD
     incident_id = _create_incident_context(alerts_snapshot, analysis, decision)
     task_payload = _build_task_payload(
         alerts_snapshot,
@@ -369,18 +409,26 @@ async def decision_trigger(request: DecisionTriggerRequest) -> Dict[str, Any]:
             normalized_result = dict(result)
             normalized_result["incident_id"] = normalized_result.get("incident_id") or incident_id
             _apply_result_to_incident(normalized_result)
+=======
+    task_payload = _build_task_payload(alerts_snapshot, decision, enforce_actions=request.enforce_actions)
+    dispatch_results = await _dispatch_tasks(task_payload)
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
 
     if request.clear_alerts:
         _received_alerts.clear()
 
     return {
+<<<<<<< HEAD
         "incident_id": incident_id,
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
         "alerts_snapshot": alerts_snapshot,
         "alert_sources": alert_sources,
         "analysis": analysis,
         "decision": decision,
         "task_payload": task_payload.model_dump(),
         "dispatch": {"dispatch_results": dispatch_results},
+<<<<<<< HEAD
         "incident": _incidents.get(incident_id, {}),
         "ooda": _ooda_metrics(),
     }
@@ -408,4 +456,6 @@ async def incidents_feedback(message: Dict[str, Any]) -> Dict[str, Any]:
         "incident_id": incident_id,
         "incident": _incidents.get(incident_id, {}),
         "ooda": _ooda_metrics(),
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
     }

@@ -11,8 +11,12 @@ from pydantic import BaseModel, Field
 class MessageType(str, Enum):
     ALERT = "alert"
     TASK = "task"
+    PROPOSAL = "proposal"
+    COUNTER_PROPOSAL = "counter_proposal"
+    CONSENSUS = "consensus"
     COMMAND = "command"
     RESULT = "result"
+    LOCAL_SITUATION = "local_situation"
     HEARTBEAT = "heartbeat"
     REGISTER = "register"
 
@@ -38,7 +42,9 @@ class AlertPayload(BaseModel):
 
 class TaskItem(BaseModel):
     task_id: str = Field(default_factory=lambda: str(uuid4()))
+    proposal_id: str = Field(default_factory=lambda: str(uuid4()))
     incident_id: str = ""
+    negotiation_round: int = 1
     objective: str
     target_domain: str
     priority: int = 5
@@ -51,6 +57,9 @@ class TaskItem(BaseModel):
 class TaskPayload(BaseModel):
     strategy_id: str = Field(default_factory=lambda: str(uuid4()))
     reasoning: str
+    plan_type: str = "task_plan"
+    negotiation_timeout_ms: int = 3000
+    max_negotiation_rounds: int = 1
     tasks: List[TaskItem]
 
 
@@ -80,6 +89,17 @@ class FeedbackPayload(BaseModel):
     ooda_stage: str = "feedback"
     status: str = "reported"
     results: List[ResultPayload] = Field(default_factory=list)
+
+
+class LocalSituationPayload(BaseModel):
+    executor_id: str
+    domain: str
+    risk_score: float
+    confidence: float
+    top_alert_types: List[str] = Field(default_factory=list)
+    resource_status: Dict[str, Any] = Field(default_factory=dict)
+    proposed_action: str = "observe_alert"
+    event: str = "periodic"
 
 
 class ManagerAgent:

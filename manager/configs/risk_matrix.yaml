@@ -1,0 +1,22 @@
+# Domain-weighted calibration for global risk matrix.
+# This file adds domain criticality as an extra factor after base matrix inference.
+
+domain_weights:
+  core: 1.0
+  office: 0.6
+  unknown: 0.5
+
+level_scores:
+  high: 1.0
+  medium: 0.6
+  low: 0.2
+
+calibration:
+  enabled: true
+  # Only calibrate when the attack is cross-domain and a correlation edge exists.
+  cross_domain_required: true
+  edge_required: true
+  # If domain_weight_factor >= high_factor_min and base_risk >= medium, uplift one level.
+  high_factor_min: 0.55
+  # If domain_weight_factor >= critical_factor_min and base_risk >= high, uplift one level.
+  critical_factor_min: 0.75

@@ -6,6 +6,7 @@ from typing import Dict, List
 class DecisionTreeModel:
     """轻量决策树（规则化）用于策略模板选择。"""
 
+<<<<<<< HEAD
     def _build_joint_plan(self, incident_type: str, involved_domains: List[str]) -> List[Dict]:
         if not involved_domains:
             return []
@@ -30,13 +31,18 @@ class DecisionTreeModel:
             ]
         return [{"domain": domains[0], "objective": "observe_alert"}]
 
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
     def choose_strategy(self, analysis: Dict) -> Dict:
         risk = analysis.get("risk_level", "low")
         cross_domain = analysis.get("is_cross_domain_attack", False)
         pattern = analysis.get("attack_pattern", "unknown")
+<<<<<<< HEAD
         incident_type = analysis.get("incident_type", "none")
         involved_domains = analysis.get("involved_domains", [])
         joint_plan = self._build_joint_plan(incident_type, involved_domains)
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
 
         if risk == "critical" and cross_domain:
             return {
@@ -44,8 +50,11 @@ class DecisionTreeModel:
                 "priority": 1,
                 "playbook": ["block_ip", "tighten_acl", "enable_ids_strict"],
                 "pattern": pattern,
+<<<<<<< HEAD
                 "incident_type": incident_type,
                 "joint_plan": joint_plan,
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
             }
         if risk in {"high", "critical"}:
             return {
@@ -53,16 +62,22 @@ class DecisionTreeModel:
                 "priority": 2,
                 "playbook": ["block_ip", "raise_monitoring"],
                 "pattern": pattern,
+<<<<<<< HEAD
                 "incident_type": incident_type,
                 "joint_plan": joint_plan,
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
             }
         return {
             "strategy": "observe_and_alert",
             "priority": 4,
             "playbook": ["log_only", "notify_admin"],
             "pattern": pattern,
+<<<<<<< HEAD
             "incident_type": incident_type,
             "joint_plan": joint_plan,
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
         }
 
     def correlate_alerts(self, alerts: List[Dict]) -> Dict:

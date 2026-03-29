@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 class RuleEngine:
     """基于规则的跨域攻击研判引擎。"""
 
+<<<<<<< HEAD
     def _infer_incident_type(self, attack_types: List[str], domains: set) -> str:
         if len(domains) < 2:
             return "single_domain_incident"
@@ -21,15 +22,20 @@ class RuleEngine:
             return "privilege_data_theft"
         return "cross_domain_suspicious"
 
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
     def evaluate(self, alerts: List[Dict]) -> Dict:
         if not alerts:
             return {
                 "is_cross_domain_attack": False,
                 "risk_level": "low",
                 "attack_pattern": "none",
+<<<<<<< HEAD
                 "incident_type": "none",
                 "involved_domains": [],
                 "confidence": 0.0,
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
                 "reason": "no alert data",
             }
 
@@ -40,8 +46,11 @@ class RuleEngine:
         dominant_attack = Counter(attack_types).most_common(1)[0][0]
         high_count = severity_counter.get("high", 0) + severity_counter.get("critical", 0)
         cross_domain = len(domains) >= 2
+<<<<<<< HEAD
         incident_type = self._infer_incident_type(attack_types, domains)
         confidence = round(min(1.0, high_count / max(1, len(alerts))), 3)
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
 
         if cross_domain and high_count >= 2:
             risk = "critical"
@@ -54,9 +63,12 @@ class RuleEngine:
             "is_cross_domain_attack": cross_domain,
             "risk_level": risk,
             "attack_pattern": dominant_attack,
+<<<<<<< HEAD
             "incident_type": incident_type,
             "involved_domains": sorted(d for d in domains if d),
             "confidence": confidence,
+=======
+>>>>>>> 3dc494244996b3f270a953ee5f7a3d88d7a101ee
             "reason": f"domains={len(domains)}, high_like_alerts={high_count}",
         }
 

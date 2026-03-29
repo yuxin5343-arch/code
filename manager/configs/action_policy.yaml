@@ -1,0 +1,56 @@
+# Data-driven arbitration policy for one-shot negotiation finalization.
+# Manager evaluates counter proposals by security_gain threshold (min_gain)
+# derived from global risk level.
+
+actions:
+  isolate_host:
+    security_gain: 10
+    business_cost: 9
+  tighten_acl:
+    security_gain: 9
+    business_cost: 7
+  block_ip:
+    security_gain: 8
+    business_cost: 6
+  block_traffic:
+    security_gain: 8
+    business_cost: 7
+  degrade_traffic:
+    security_gain: 5
+    business_cost: 4
+  raise_monitoring:
+    security_gain: 4
+    business_cost: 2
+  observe_alert:
+    security_gain: 2
+    business_cost: 1
+
+risk_min_gain:
+  critical: 8
+  high: 6
+  medium: 4
+  low: 2
+
+# Domain criticality offsets: higher value means stricter minimum gain.
+# Core domain is less tolerant to defense degradation.
+domain_min_gain_offset:
+  core: 2
+  office: 0
+
+# Confidence-aware filtering for counter proposals.
+confidence_policy:
+  min_confidence_for_downgrade: 0.6
+  low_confidence_extra_gain: 1
+
+# Ordered fallback candidates per risk when counter proposal is invalid.
+fallback_by_risk:
+  critical: [block_ip, block_traffic, raise_monitoring, observe_alert]
+  high: [block_ip, raise_monitoring, observe_alert]
+  medium: [raise_monitoring, observe_alert]
+  low: [observe_alert]
+
+# Actions disallowed under specific local reason_code constraints.
+reason_disallow_actions:
+  RESOURCE_BLOCK_LIMIT: [block_ip, block_traffic, tighten_acl, isolate_host]
+  FAILURE_STREAK_DEGRADE: [block_ip, block_traffic, tighten_acl, isolate_host]
+  CRITICAL_ASSET_PROTECTED: [tighten_acl, isolate_host]

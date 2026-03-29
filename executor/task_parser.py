@@ -8,6 +8,53 @@ from communication.message_protocol import TaskItem
 class TaskParser:
     """将通用协同任务映射到设备能力层。"""
 
+    def precheck_task(self, task: TaskItem, local_situation: Dict) -> Dict:
+        constraints = task.constraints if isinstance(task.constraints, dict) else {}
+        resource_status = local_situation.get("resource_status", {}) if isinstance(local_situation, dict) else {}
+
+        objective = str(task.objective)
+        asset_level = str(constraints.get("asset_level", "")).lower()
+        asset_id = str(constraints.get("asset_id", ""))
+        whitelist_assets = set(resource_status.get("business_whitelist_assets", []))
+        max_block_actions = int(resource_status.get("max_block_actions", 0))
+        used_block_actions = int(resource_status.get("used_block_actions", 0))
+        consecutive_failures = int(resource_status.get("consecutive_failures", 0))
+        failure_threshold = int(resource_status.get("failure_threshold", 3))
+
+        if objective in {"tighten_acl", "isolate_host"} and (
+            asset_level == "critical" or (asset_id and asset_id in whitelist_assets)
+        ):
+            return {
+                "decision": "counter_proposal",
+                "reason_code": "CRITICAL_ASSET_PROTECTED",
+                "message": "critical asset should not be isolated directly",
+                "proposed_action": "degrade_traffic",
+            }
+
+        if objective in {"block_ip", "block_traffic", "tighten_acl", "isolate_host"} and max_block_actions > 0:
+            if used_block_actions >= max_block_actions:
+                return {
+                    "decision": "counter_proposal",
+                    "reason_code": "RESOURCE_BLOCK_LIMIT",
+                    "message": "local block action budget exhausted",
+                    "proposed_action": "observe_alert",
+                }
+
+        if consecutive_failures >= failure_threshold and objective in {"tighten_acl", "isolate_host", "block_traffic", "block_ip"}:
+            return {
+                "decision": "counter_proposal",
+                "reason_code": "FAILURE_STREAK_DEGRADE",
+                "message": "consecutive failures exceed threshold",
+                "proposed_action": "observe_alert",
+            }
+
+        return {
+            "decision": "accept",
+            "reason_code": "OK",
+            "message": "task is feasible",
+            "proposed_action": "",
+        }
+
     def _parse_block_traffic(self, constraints: Dict) -> Dict:
         src_ip = constraints.get("ip") or constraints.get("src_ip")
         dst_ip = constraints.get("dst_ip")
