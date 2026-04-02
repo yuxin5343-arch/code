@@ -58,10 +58,10 @@ code-a/
 
 ## 快速部署（Docker，推荐）
 
-1. 启动核心服务
+1. 启动核心服务（Manager + 3 个执行器）
 
 ```bash
-docker compose up -d --build manager executor_office executor_core
+docker compose up -d --build manager executor_office executor_core executor-portal
 ```
 
 2. 运行实验
@@ -93,20 +93,21 @@ chmod 775 results
 
 ### Playbook 场景
 
-当前为 5 个核心场景，双模式对照：
+当前为 6 个核心场景，双模式对照：
 - 模式 1：oneshot_collab（一轮协同）
 - 模式 2：no_collab（无协同）
 
 场景定义：
 - A_happy_path：无分歧协同，验证闭环时延与阻断效果。
+- D_cross_domain_weak_signal：Portal -> Office -> Core 三节点微弱信号叠加提权，验证防御前置。
 - B_critical_asset_counter：关键资产触发反提案（如 degrade_traffic）。
-- C_budget_exhaustion：资源预算受限下的反提案协商与兜底动作（fallback）。
-- D_cross_domain_weak_signal：弱信号跨域关联后风险校准。
 - E_false_positive_noise：误报噪音场景，验证低置信度拒绝阻断。
+- C_budget_exhaustion：资源预算受限下的反提案协商与兜底动作（fallback）。
+- F_portal_bridge_fallback：Portal 失陷后跳板攻击 Office，Office 因关键资产拒绝阻断，Manager 改派 Portal 源头封堵。
 
 默认样本规模：
 - 每场景每模式 50 次
-- 总样本数 = 5 * 50 * 2 = 500
+- 总样本数 = 6 * 50 * 2 = 600
 
 ### 常用参数
 
@@ -124,6 +125,31 @@ docker compose run --rm experiment
 ```bash
 docker compose build manager experiment
 docker compose run --rm experiment
+```
+
+### 演示模式（老师答辩推荐）
+
+1. 一键输出全场景结论 + 生成演示版 HTML
+
+```bash
+python3 presentation_summary.py
+```
+
+或显式使用子目录脚本：
+
+```bash
+python3 simulation/presentation_summary.py
+```
+
+输出内容包含：
+- 全部 Playbook 的协同/非协同攻击成功率对比与 PASS/CHECK 结论
+- Playbook F 的快速验收结论（PASS/FAIL）
+- 演示版报告 HTML：results/presentation_*.html（含全场景图表 + 自动结论 + 单次样本链路回放）
+
+2. 仅验证 Playbook F 是否通过
+
+```bash
+python3 simulation/verify_playbook_f.py
 ```
 
 ## 核心协同机制（论文重点）
@@ -195,6 +221,7 @@ python3 simulation/minimal_negotiation_smoke.py
 export MANAGER_SERVICE=http://127.0.0.1:8000
 export EXECUTOR_OFFICE_SERVICE=http://127.0.0.1:8101
 export EXECUTOR_CORE_SERVICE=http://127.0.0.1:8102
+export EXECUTOR_PORTAL_SERVICE=http://127.0.0.1:8103
 ```
 
 ### 本地非 Docker 启动
@@ -213,7 +240,7 @@ pip install -r requirements.txt
 uvicorn manager.api_server:app --host 0.0.0.0 --port 8000
 ```
 
-3. 启动 Executor（两个终端）
+3. 启动 Executor（三个终端）
 
 ```bash
 export EXECUTOR_DOMAIN=office
@@ -225,6 +252,13 @@ uvicorn executor.api_server:app --host 0.0.0.0 --port 8101
 export EXECUTOR_DOMAIN=core
 export EXECUTOR_ID=executor-core
 uvicorn executor.api_server:app --host 0.0.0.0 --port 8102
+```
+
+```bash
+export EXECUTOR_DOMAIN=portal
+export EXECUTOR_ID=executor-portal
+export CRITICAL_ASSETS=portal-web,nginx-gateway
+uvicorn executor.api_server:app --host 0.0.0.0 --port 8103
 ```
 
 4. 运行实验

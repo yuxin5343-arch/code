@@ -8,6 +8,7 @@ services:
       - PYTHONPATH=/app
       - EXECUTOR_OFFICE_SERVICE=http://executor_office:8101
       - EXECUTOR_CORE_SERVICE=http://executor_core:8102
+      - EXECUTOR_PORTAL_SERVICE=http://executor-portal:8103
     # 2. 增加启动等待和日志输出，便于调试
     command: ["bash", "-lc", "sleep 3 && uvicorn manager.api_server:app --host 0.0.0.0 --port 8000 --log-level info"]
     ports:
@@ -15,6 +16,7 @@ services:
     networks:
       - office_net
       - core_net
+      - portal_net
     # 3. 健康检查：确保服务真的启动就绪
     #healthcheck:
       #test: ["CMD", "curl", "-f", "http://localhost:8000/health"]  # 需确保有健康检查接口，无则替换为 nc -z localhost 8000
@@ -73,16 +75,42 @@ services:
       #retries: 3
       #start_period: 10s
 
+  executor-portal:
+    build: .
+    container_name: executor-portal
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+      - EXECUTOR_DOMAIN=portal
+      - EXECUTOR_ID=executor-portal
+      - MANAGER_SERVICE=http://manager:8000
+      - CRITICAL_ASSETS=portal-web,nginx-gateway
+      - EXECUTOR_SEED=20260328
+      - EXECUTOR_SUCCESS_RATE=0.92
+      - EXECUTOR_LATENCY_MIN_MS=20
+      - EXECUTOR_LATENCY_MAX_MS=120
+    command: ["bash", "-lc", "sleep 3 && uvicorn executor.api_server:app --host 0.0.0.0 --port 8103 --log-level info"]
+    ports:
+      - "8103:8103"
+    networks:
+      - portal_net
+    #healthcheck:
+      #test: ["CMD", "nc", "-z", "localhost", "8103"]
+      #interval: 5s
+      #timeout: 3s
+      #retries: 3
+      #start_period: 10s
+
   experiment:
     build: .
     container_name: experiment-runner
     working_dir: /app
-    user: "${UID:-1000}:${GID:-1000}"
     # 4. 依赖健康检查：仅当其他服务就绪后才启动
     depends_on:
       - manager
       - executor_office
       - executor_core
+      - executor-portal
       #manager:
         #condition: service_healthy
       #executor_office:
@@ -95,6 +123,7 @@ services:
       - MANAGER_SERVICE=http://manager:8000
       - EXECUTOR_OFFICE_SERVICE=http://executor_office:8101
       - EXECUTOR_CORE_SERVICE=http://executor_core:8102
+      - EXECUTOR_PORTAL_SERVICE=http://executor-portal:8103
       - EXPERIMENT_SEED=20260325
       - SCENARIO_ID=A_lateral_penetration
       - ATTACK_MIX_THRESHOLD=0.45
@@ -105,9 +134,12 @@ services:
     networks:
       - office_net
       - core_net
+      - portal_net
 
 networks:
   office_net:
     driver: bridge
   core_net:
+    driver: bridge
+  portal_net:
     driver: bridge

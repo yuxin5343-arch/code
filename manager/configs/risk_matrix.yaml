@@ -4,6 +4,7 @@
 domain_weights:
   core: 1.0
   office: 0.6
+  portal: 0.4
   unknown: 0.5
 
 level_scores:

@@ -164,8 +164,19 @@ class RuleEngine:
     def _global_decision_matrix(self, domain_levels: Dict[str, str], edge_count: int) -> Tuple[str, str]:
         levels = list(domain_levels.values())
         cross_domain = len(domain_levels) >= 2
+        node_count = len(domain_levels)
+        has_portal = "portal" in domain_levels
+        has_office = "office" in domain_levels
+        has_core = "core" in domain_levels
         has_high = any(level == "high" for level in levels)
         has_medium = any(level == "medium" for level in levels)
+
+        # Portal -> Office weak-signal chain: keep base risk at medium and let
+        # domain-weight calibration perform the visible uplift to high when warranted.
+        if cross_domain and has_portal and has_office and edge_count >= 1 and all(level in {"low", "medium"} for level in levels):
+            if node_count >= 3 and has_core and edge_count >= 2:
+                return "medium", "high"
+            return "medium", "medium"
 
         if cross_domain and edge_count >= 1 and has_high:
             return "critical", "high"

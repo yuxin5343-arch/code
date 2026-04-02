@@ -18,6 +18,7 @@ from utils.config_loader import load_yaml
 
 app = FastAPI(title="Manager Agent API", version="1.0.0")
 
+# 进程内全局状态：仅在当前 manager 实例生命周期内有效。
 _models = ModelLoader().load_all()
 _rule_engine = _models["rule_engine"]
 _decision_tree = _models["decision_tree"]
@@ -29,6 +30,7 @@ _executor_situations: Dict[str, Dict[str, Any]] = {}
 _executor_endpoints = {
     "office": os.getenv("EXECUTOR_OFFICE_SERVICE", "http://127.0.0.1:8101"),
     "core": os.getenv("EXECUTOR_CORE_SERVICE", "http://127.0.0.1:8102"),
+    "portal": os.getenv("EXECUTOR_PORTAL_SERVICE", "http://127.0.0.1:8103"),
 }
 
 DEFAULT_ACTION_POLICY: Dict[str, Any] = {
@@ -62,6 +64,7 @@ DEFAULT_ACTION_POLICY: Dict[str, Any] = {
 
 
 def _deep_merge(base: Dict[str, Any], incoming: Dict[str, Any]) -> Dict[str, Any]:
+    """递归合并策略配置，确保本地配置可按层覆盖默认值。"""
     merged = dict(base)
     for key, value in incoming.items():
         if isinstance(value, dict) and isinstance(merged.get(key), dict):
@@ -72,6 +75,7 @@ def _deep_merge(base: Dict[str, Any], incoming: Dict[str, Any]) -> Dict[str, Any
 
 
 def _load_action_policy() -> Dict[str, Any]:
+    """从 YAML 读取动作策略，并与内置默认策略做兜底合并。"""
     policy_path = os.getenv(
         "ACTION_POLICY_FILE",
         str(Path(__file__).resolve().parent / "configs" / "action_policy.yaml"),
@@ -114,6 +118,7 @@ def _action_gain(action: str) -> int:
 
 
 def _pick_fallback_action(risk_level: str, reason_code: str) -> str:
+    """当反提案不可用时，按风险等级与限制条件选择兜底动作。"""
     risk_key = str(risk_level or "low").lower()
     reason = str(reason_code or "")
     fallback_table = _action_policy.get("fallback_by_risk", {}) if isinstance(_action_policy, dict) else {}
@@ -123,14 +128,14 @@ def _pick_fallback_action(risk_level: str, reason_code: str) -> str:
     blocked = set(reason_disallow.get(reason, [])) if isinstance(reason_disallow, dict) else set()
     min_gain = _risk_min_gain(risk_key)
 
-    # First pass: keep minimum security baseline.
+    # 第一轮：优先满足最小安全增益基线。
     for action in candidates:
         if action in blocked:
             continue
         if _action_gain(action) >= min_gain:
             return str(action)
 
-    # Second pass: degrade gracefully if no candidate can hit baseline under constraints.
+    # 第二轮：若受约束无法达标，则选择未被禁用的可执行动作平稳降级。
     for action in candidates:
         if action in blocked:
             continue
@@ -149,6 +154,7 @@ def _now_iso() -> str:
 
 
 def _ensure_incident(incident_id: str) -> Dict[str, Any]:
+    """确保事件存在；不存在时初始化事件聚合结构。"""
     if incident_id not in _incidents:
         _incidents[incident_id] = {
             "incident_id": incident_id,
@@ -182,6 +188,7 @@ def _create_incident_context(alerts: List[Dict[str, Any]], analysis: Dict[str, A
 
 
 def _apply_result_to_incident(result: Dict[str, Any]) -> None:
+    """将执行结果回填到事件状态，并推进 OODA 阶段。"""
     incident_id = str(result.get("incident_id", ""))
     if not incident_id:
         return
@@ -249,6 +256,7 @@ def _ooda_metrics() -> Dict[str, Any]:
 
 
 def _normalize_alert(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """兼容原始告警与消息封装两种格式，统一为告警体。"""
     if payload.get("message_type") == MessageType.ALERT.value and isinstance(payload.get("payload"), dict):
         normalized = dict(payload["payload"])
         normalized["alert_source"] = payload.get("source", "unknown")
@@ -271,6 +279,7 @@ def _pick_objective(playbook: List[str], enforce_actions: bool, has_ip: bool) ->
 
 
 def _collect_domain_context(alerts: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    """按域聚合告警，并提取任务构建所需的关键上下文。"""
     grouped: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
     for alert in alerts:
         grouped[alert.get("domain", "unknown")].append(alert)
@@ -290,6 +299,7 @@ def _collect_domain_context(alerts: List[Dict[str, Any]]) -> Dict[str, Dict[str,
 
 
 def _local_constraints_by_domain() -> Dict[str, Dict[str, Any]]:
+    """将 executor 上报的本地态势映射为按域约束。"""
     result: Dict[str, Dict[str, Any]] = {}
     for item in _executor_situations.values():
         domain = str(item.get("domain", "unknown"))
@@ -314,6 +324,7 @@ def _build_task_payload(
     max_negotiation_rounds: int = 1,
     negotiation_timeout_ms: int = 3000,
 ) -> TaskPayload:
+    """根据策略与域上下文生成任务载荷（意图计划或联合计划）。"""
     domain_context = _collect_domain_context(alerts)
 
     tasks: List[TaskItem] = []
@@ -404,6 +415,7 @@ def _build_task_payload(
 
 
 async def _dispatch_tasks(task_payload: TaskPayload, message_type: MessageType = MessageType.TASK) -> List[Dict[str, Any]]:
+    """按域拆分任务并下发到 executor，内置轻量重试。"""
     dispatch_results: List[Dict[str, Any]] = []
     grouped: Dict[str, List[TaskItem]] = defaultdict(list)
     for task in task_payload.tasks:
@@ -478,6 +490,7 @@ async def _dispatch_tasks(task_payload: TaskPayload, message_type: MessageType =
 
 
 def _collect_negotiation_feedback(dispatch_results: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    """把 executor 返回整理为按 task_id 索引的协商反馈。"""
     feedback: Dict[str, Dict[str, Any]] = {}
     for dispatch in dispatch_results:
         for result in dispatch.get("results", []):
@@ -504,6 +517,7 @@ def _refine_consensus_payload(
     feedback: Dict[str, Dict[str, Any]],
     analysis: Dict[str, Any],
 ) -> TaskPayload:
+    """一轮协商终裁：采纳有效反提案，否则回退到策略兜底动作。"""
     refined_tasks: List[TaskItem] = []
     global_risk_level = str(analysis.get("risk_level", "low"))
     confidence_global = str(analysis.get("confidence_global", analysis.get("confidence", "low"))).lower()
@@ -515,6 +529,12 @@ def _refine_consensus_payload(
         and edge_count == 0
         and confidence_global in {"low", "medium"}
         and dominant_attack == "port_scan"
+    )
+    involved_domains = {str(d) for d in analysis.get("involved_domains", []) if str(d)}
+    allow_portal_fallback = "portal" in involved_domains and "office" in involved_domains
+    has_portal_blocking_intent = any(
+        str(t.target_domain) == "portal" and str(t.objective) in {"block_ip", "block_traffic", "tighten_acl"}
+        for t in intent_payload.tasks
     )
     blocking_objectives = {"block_ip", "block_traffic", "tighten_acl", "isolate_host", "enable_ids_strict"}
 
@@ -536,22 +556,34 @@ def _refine_consensus_payload(
 
         effective_min_gain = domain_adjusted_min_gain
         if is_downgrade and confidence < min_confidence:
-            # If executor is uncertain and asks to downgrade defense, require stronger proposal.
+            # executor 低置信度且要求降级时，提高门槛避免过度降防。
             effective_min_gain += low_confidence_gain_bonus
 
         final_objective = task.objective
         final_reason = "accepted_intent"
+        add_portal_fallback = False
         # 一轮协商后强制终裁：要么采纳反提案，要么执行兜底策略。
         if weak_cross_domain_evidence and str(task.objective) in blocking_objectives:
             final_objective = "observe_alert"
             final_reason = "reject_block_low_confidence"
         elif status in {"counter_proposal", "reject"}:
-            if suggested and suggested_gain >= effective_min_gain:
+            if domain == "office" and reason_code == "CRITICAL_ASSET_PROTECTED" and suggested:
+                final_objective = suggested
+                final_reason = "adopt_counter_proposal"
+                add_portal_fallback = allow_portal_fallback and final_objective == "observe_alert"
+            elif suggested and suggested_gain >= effective_min_gain:
                 final_objective = suggested
                 final_reason = "adopt_counter_proposal"
             else:
                 final_objective = _pick_fallback_action(global_risk_level, reason_code=reason_code)
                 final_reason = "fallback_min_gain_policy"
+                add_portal_fallback = (
+                    allow_portal_fallback
+                    and not has_portal_blocking_intent
+                    and domain == "office"
+                    and reason_code == "CRITICAL_ASSET_PROTECTED"
+                    and final_objective == "observe_alert"
+                )
 
         constraints = dict(task.constraints)
         constraints["consensus_reason"] = final_reason
@@ -588,6 +620,31 @@ def _refine_consensus_payload(
             )
         )
 
+        if add_portal_fallback:
+            portal_objective = "tighten_acl"
+            if _action_gain(portal_objective) < base_min_gain:
+                portal_objective = "block_ip"
+
+            portal_constraints = dict(task.constraints)
+            portal_constraints["consensus_reason"] = "fallback_source_containment"
+            portal_constraints["source_fallback_from_domain"] = "office"
+            portal_constraints["source_fallback_trigger"] = "office_critical_asset_blocked"
+            portal_constraints["fallback_generated"] = True
+
+            refined_tasks.append(
+                TaskItem(
+                    incident_id=task.incident_id,
+                    negotiation_round=2,
+                    objective=portal_objective,
+                    target_domain="portal",
+                    priority=task.priority,
+                    ooda_stage=task.ooda_stage,
+                    status="pending",
+                    action_hints=list(task.action_hints) + ["source_fallback", "target:portal"],
+                    constraints=portal_constraints,
+                )
+            )
+
     return TaskPayload(
         strategy_id=intent_payload.strategy_id,
         reasoning=f"{intent_payload.reasoning}, one_shot_negotiation=finalized",
@@ -618,6 +675,7 @@ async def alerts(message: Dict[str, Any]) -> Dict[str, Any]:
 
 @app.post("/decision/trigger")
 async def decision_trigger(request: DecisionTriggerRequest) -> Dict[str, Any]:
+    # 主流程：观察告警 -> 规则分析 -> 决策选策 -> 意图下发 -> 协商收敛 -> 结果回填。
     alerts_snapshot = list(_received_alerts)
     alert_sources = sorted({a.get("alert_source", "unknown") for a in alerts_snapshot})
     analysis = _rule_engine.evaluate(alerts_snapshot)
@@ -737,7 +795,7 @@ async def list_executor_local_situation() -> Dict[str, Any]:
 
 @app.post("/debug/reset-state")
 async def debug_reset_state() -> Dict[str, Any]:
-    """Reset in-memory state for deterministic playbook experiments."""
+    """重置内存态，便于做可重复的 playbook 实验。"""
     _received_alerts.clear()
     _incidents.clear()
     _executor_situations.clear()

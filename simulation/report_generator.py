@@ -6,16 +6,271 @@ from __future__ import annotations
 """
 
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, List
 
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+
+
+PLAYBOOK_ORDER = [
+    "A_happy_path",
+    "D_cross_domain_weak_signal",
+    "B_critical_asset_counter",
+    "E_false_positive_noise",
+    "C_budget_exhaustion",
+    "F_portal_bridge_fallback",
+]
+
+PLAYBOOK_LABEL = {
+    "A_happy_path": "场景A",
+    "D_cross_domain_weak_signal": "场景B",
+    "B_critical_asset_counter": "场景C",
+    "E_false_positive_noise": "场景D",
+    "C_budget_exhaustion": "场景E",
+    "F_portal_bridge_fallback": "场景F",
+}
+
+SCENE_TO_PLAYBOOK = {v: k for k, v in PLAYBOOK_LABEL.items()}
 
 
 def _get_metric(result: Dict, key: str) -> float:
     """安全读取数值指标，缺失时返回 0。"""
     value = result.get(key, 0)
     return float(value if value is not None else 0)
+
+
+def _collect_playbook_rows(by_mode_playbook: Dict[str, Dict[str, Dict[str, Any]]]) -> List[Dict[str, Any]]:
+    collab_map = by_mode_playbook.get("oneshot_collab", {}) if isinstance(by_mode_playbook, dict) else {}
+    no_map = by_mode_playbook.get("no_collab", {}) if isinstance(by_mode_playbook, dict) else {}
+    playbook_ids = [pid for pid in PLAYBOOK_ORDER if pid in set(collab_map.keys()) | set(no_map.keys())]
+
+    rows: List[Dict[str, Any]] = []
+    for pb in playbook_ids:
+        collab = collab_map.get(pb, {}) if isinstance(collab_map.get(pb, {}), dict) else {}
+        no_collab = no_map.get(pb, {}) if isinstance(no_map.get(pb, {}), dict) else {}
+        c_attack = _get_metric(collab, "attack_success_rate")
+        n_attack = _get_metric(no_collab, "attack_success_rate")
+        rows.append(
+            {
+                "playbook": pb,
+                "scene": PLAYBOOK_LABEL.get(pb, pb),
+                "collab_attack": c_attack,
+                "no_collab_attack": n_attack,
+                "attack_reduction": n_attack - c_attack,
+                "collab_block_rate": _get_metric(collab, "block_rate"),
+                "no_collab_block_rate": _get_metric(no_collab, "block_rate"),
+                "collab_counter_rate": _get_metric(collab, "counter_rate"),
+                "collab_fallback_rate": _get_metric(collab, "fallback_rate"),
+                "no_collab_counter_rate": _get_metric(no_collab, "counter_rate"),
+                "no_collab_fallback_rate": _get_metric(no_collab, "fallback_rate"),
+                "collab_task_success_rate": _get_metric(collab, "task_success_rate"),
+                "no_collab_task_success_rate": _get_metric(no_collab, "task_success_rate"),
+                "collab_latency": _get_metric(collab, "avg_latency_ms"),
+                "no_collab_latency": _get_metric(no_collab, "avg_latency_ms"),
+                "samples": int(collab.get("samples", 0) or no_collab.get("samples", 0) or 0),
+            }
+        )
+    return rows
+
+
+def _boundary_analysis(rows: List[Dict[str, Any]], flat_threshold: float = 0.1) -> Dict[str, Any]:
+    if not rows:
+        return {
+            "formula": "N/A",
+            "avg": 0.0,
+            "flat": [],
+            "limitations": ["无可用场景数据，无法做边界分析。"],
+        }
+
+    score_parts: List[str] = []
+    score_values: List[int] = []
+    flat_playbooks: List[str] = []
+    for r in rows:
+        delta = float(r.get("attack_reduction", 0.0))
+        score = 1 if delta >= flat_threshold else 0
+        score_parts.append(str(score))
+        score_values.append(score)
+        if score == 0:
+            flat_playbooks.append(str(r.get("playbook", "")))
+
+    numerator = sum(score_values)
+    denominator = len(score_values)
+    formula = f"({' + '.join(score_parts)})/{denominator} = {numerator}/{denominator} = {numerator/denominator:.3f}"
+
+    limitations: List[str] = []
+    if "C_budget_exhaustion" in flat_playbooks:
+        limitations.append("场景E 接近持平：本质是本地阻断预算耗尽，属于物理资源边界，协同无法凭空创造阻断配额。")
+    if "E_false_positive_noise" in flat_playbooks:
+        limitations.append("场景D 接近持平：系统刻意避免拦截合法业务噪音，这是一种安全-业务平衡下的保守策略边界。")
+    if not limitations:
+        limitations.append("当前数据集中未出现典型边界 Case，建议补充极端资源约束和业务白名单冲突场景。")
+
+    return {
+        "formula": formula,
+        "avg": round(numerator / denominator, 3),
+        "flat": flat_playbooks,
+        "limitations": limitations,
+    }
+
+
+def _build_conclusions(rows: List[Dict[str, Any]]) -> List[str]:
+    if not rows:
+        return ["未检测到可用于总结的场景数据。"]
+
+    improved = [r for r in rows if float(r.get("attack_reduction", 0.0)) > 0]
+    stable = [r for r in rows if abs(float(r.get("attack_reduction", 0.0))) <= 1e-9]
+    regressed = [r for r in rows if float(r.get("attack_reduction", 0.0)) < 0]
+    avg_reduction = sum(float(r.get("attack_reduction", 0.0)) for r in rows) / len(rows)
+
+    lines = [
+        f"总体上，协同模式在 {len(improved)}/{len(rows)} 个场景中降低了攻击成功率；平均攻击成功率降幅为 {avg_reduction:.3f}。",
+    ]
+    if stable:
+        lines.append(f"有 {len(stable)} 个场景协同与非协同效果持平。")
+    if regressed:
+        lines.append(f"存在 {len(regressed)} 个场景出现回退，建议重点复盘。")
+
+    top = sorted(rows, key=lambda r: float(r.get("attack_reduction", 0.0)), reverse=True)[:3]
+    if top:
+        top_text = "；".join(
+            f"{PLAYBOOK_LABEL.get(str(r.get('playbook', '')), str(r.get('playbook', '')))} 降幅 {float(r.get('attack_reduction', 0.0)):.3f}"
+            for r in top
+        )
+        lines.append(f"改进最明显的场景：{top_text}。")
+
+    f_row = next((r for r in rows if str(r.get("playbook")) == SCENE_TO_PLAYBOOK.get("场景F", "F_portal_bridge_fallback")), None)
+    if f_row:
+        f_pass = (
+            float(f_row.get("collab_attack", 1.0)) <= 0.2
+            and float(f_row.get("no_collab_attack", 0.0)) >= 0.8
+            and float(f_row.get("collab_counter_rate", 0.0)) >= 0.3
+            and float(f_row.get("collab_fallback_rate", 0.0)) >= 0.2
+        )
+        lines.append(
+            "场景F 验收结论："
+            f"collab_attack={float(f_row.get('collab_attack', 0.0)):.3f}, "
+            f"no_collab_attack={float(f_row.get('no_collab_attack', 0.0)):.3f}, "
+            f"counter_rate={float(f_row.get('collab_counter_rate', 0.0)):.3f}, "
+            f"fallback_rate={float(f_row.get('collab_fallback_rate', 0.0)):.3f} -> "
+            f"{'PASS' if f_pass else 'FAIL'}。"
+        )
+
+    return lines
+
+
+def _pick_replay_sample_by_playbook(samples: List[Dict[str, Any]], playbook_id: str) -> Dict[str, Any]:
+    candidates = [
+        s
+        for s in samples
+        if str(s.get("playbook_id", "")) == playbook_id and str(s.get("mode", "")) == "oneshot_collab"
+    ]
+    if not candidates:
+        return {}
+
+    candidates.sort(
+        key=lambda s: (
+            -int(s.get("fallback_task_count", 0)),
+            -int(s.get("adopt_counter_task_count", 0)),
+            -float(s.get("block_rate", 0.0)),
+            float(s.get("attack_success_rate", 1.0)),
+        )
+    )
+    return candidates[0]
+
+
+def _render_single_replay_html(playbook_id: str, playbook_title: str, sample: Dict[str, Any], opened: bool = False) -> str:
+    scene_label = PLAYBOOK_LABEL.get(playbook_id, playbook_id)
+    if not sample:
+        return (
+            "<details class='replay-item'>"
+            f"<summary>{scene_label} | {playbook_title}</summary>"
+            "<div class='replay-box'><p>未找到可回放样本。</p></div>"
+            "</details>"
+        )
+
+    run_id = str(sample.get("run_id", "N/A"))
+    risk = str(sample.get("analysis_risk_level", "unknown"))
+    factor = float(sample.get("analysis_domain_weight_factor", 0.0))
+    attack_success = float(sample.get("attack_success_rate", 0.0))
+    block_rate = float(sample.get("block_rate", 0.0))
+    intent = ", ".join(sample.get("intent_objectives", []))
+    consensus = ", ".join(sample.get("consensus_objectives", []))
+    status_counts = sample.get("intent_status_counts", {}) if isinstance(sample.get("intent_status_counts"), dict) else {}
+    counter_count = int(status_counts.get("counter_proposal", 0))
+    fallback_count = int(sample.get("fallback_task_count", 0))
+    flat_results = sample.get("flat_results", []) if isinstance(sample.get("flat_results"), list) else []
+
+    rows = []
+    for idx, result in enumerate(flat_results, start=1):
+        rows.append(
+            "<tr>"
+            f"<td>{idx}</td>"
+            f"<td>{result.get('domain', '')}</td>"
+            f"<td>{result.get('executor', '')}</td>"
+            f"<td>{result.get('objective', '')}</td>"
+            f"<td>{result.get('status', '')}</td>"
+            f"<td>{'yes' if bool(result.get('success', False)) else 'no'}</td>"
+            f"<td>{int(result.get('latency_ms', 0))}</td>"
+            "</tr>"
+        )
+
+    timeline = [
+        f"1) Manager 对 {scene_label} 判定风险为 {risk}，domain_weight_factor={factor:.3f}。",
+        f"2) 意图阶段下发目标动作：{intent or 'N/A'}。",
+        (
+            f"3) 协商阶段触发 counter_proposal={counter_count} 次。"
+            if counter_count > 0
+            else "3) 协商阶段未触发 counter_proposal。"
+        ),
+        (
+            f"4) 终裁阶段触发 fallback={fallback_count} 次。"
+            if fallback_count > 0
+            else "4) 终裁阶段未触发 fallback。"
+        ),
+        f"5) 共识执行动作：{consensus or 'N/A'}；结果 attack_success={attack_success:.3f}, block_rate={block_rate:.3f}。",
+    ]
+
+    timeline_html = "".join(f"<li>{line}</li>" for line in timeline)
+    table_html = "".join(rows) if rows else "<tr><td colspan='7'>无执行记录</td></tr>"
+    open_attr = " open" if opened else ""
+    return f"""
+    <details class='replay-item'{open_attr}>
+            <summary>{scene_label} | {playbook_title} | run_id={run_id}</summary>
+      <div class='replay-box'>
+        <p><b>risk:</b> {risk} | <b>domain_weight_factor:</b> {factor:.3f} | <b>attack_success:</b> {attack_success:.3f} | <b>block_rate:</b> {block_rate:.3f}</p>
+        <p><b>intent_objectives:</b> {intent or 'N/A'}</p>
+        <p><b>consensus_objectives:</b> {consensus or 'N/A'}</p>
+        <ol>{timeline_html}</ol>
+        <table class='replay-table'>
+          <thead>
+            <tr><th>#</th><th>domain</th><th>executor</th><th>objective</th><th>status</th><th>success</th><th>latency_ms</th></tr>
+          </thead>
+          <tbody>{table_html}</tbody>
+        </table>
+      </div>
+    </details>
+    """
+
+
+def _render_all_replays_html(experiment: Dict[str, Any]) -> str:
+    playbook_meta = experiment.get("playbooks", []) if isinstance(experiment.get("playbooks"), list) else []
+    samples = experiment.get("samples", []) if isinstance(experiment.get("samples"), list) else []
+
+    if not playbook_meta:
+        return "<p>未找到 playbook 元数据，无法渲染链路回放。</p>"
+
+    blocks: List[str] = []
+    ordered_meta = sorted(
+        playbook_meta,
+        key=lambda item: PLAYBOOK_ORDER.index(str(item.get("playbook_id", ""))) if str(item.get("playbook_id", "")) in PLAYBOOK_ORDER else 999,
+    )
+
+    for idx, pb in enumerate(ordered_meta):
+        pb_id = str(pb.get("playbook_id", "unknown"))
+        pb_title = str(pb.get("title", ""))
+        sample = _pick_replay_sample_by_playbook(samples, pb_id)
+        blocks.append(_render_single_replay_html(pb_id, pb_title, sample, opened=(idx == 0)))
+    return "".join(blocks)
 
 
 def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
@@ -25,12 +280,14 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
 
     collab = by_mode.get("oneshot_collab", {})
     no_collab = by_mode.get("no_collab", {})
+    rows = _collect_playbook_rows(by_mode_playbook)
 
     collab_intent = collab.get("intent_statuses", {}) if isinstance(collab, dict) else {}
     collab_intent_ratios = collab_intent.get("ratios", {}) if isinstance(collab_intent, dict) else {}
 
-    d_collab = by_mode_playbook.get("oneshot_collab", {}).get("D_cross_domain_weak_signal", {})
-    d_no_collab = by_mode_playbook.get("no_collab", {}).get("D_cross_domain_weak_signal", {})
+    b_playbook = SCENE_TO_PLAYBOOK.get("场景B", "D_cross_domain_weak_signal")
+    d_collab = by_mode_playbook.get("oneshot_collab", {}).get(b_playbook, {})
+    d_no_collab = by_mode_playbook.get("no_collab", {}).get(b_playbook, {})
 
     collab_base_risk = collab.get("base_risk_distribution", {}) if isinstance(collab, dict) else {}
     collab_final_risk = collab.get("final_risk_distribution", {}) if isinstance(collab, dict) else {}
@@ -42,9 +299,9 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         cols=2,
         subplot_titles=(
             "Attack Success Rate (Collab vs No-Collab)",
-            "False Negative Rate on Playbook D",
+            "False Negative Rate on 场景B",
             "Intent Status Ratios (Collab)",
-            "Negotiation Game Outcomes",
+            "Negotiation Game Outcomes (Counts)",
             "Lateral Spread Block Count",
             "Average Latency (ms)",
             "Low-Confidence Rejected by Manager",
@@ -108,17 +365,17 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         col=1,
     )
 
-    # Game outcomes: counter total / adopt rate / fallback rate.
+    # 协商结果：统一展示为数量口径，避免比例与次数混轴。
     fig.add_trace(
         go.Bar(
-            x=["counter_total", "adopt_counter_rate", "fallback_rate"],
+            x=["counter_total", "adopt_counter_total", "fallback_total"],
             y=[
                 _get_metric(collab, "counter_total"),
-                _get_metric(collab, "adopt_counter_rate"),
-                _get_metric(collab, "fallback_rate"),
+                _get_metric(collab, "adopt_counter_total"),
+                _get_metric(collab, "fallback_total"),
             ],
             marker_color=["#264653", "#e9c46a", "#e76f51"],
-            name="game_outcome_collab",
+            name="game_outcome_counts",
         ),
         row=2,
         col=2,
@@ -242,7 +499,400 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
     fig.update_yaxes(title_text="数量", row=5, col=1)
     fig.update_yaxes(title_text="value", row=5, col=2)
 
-    fig.write_html(str(output), include_plotlyjs="cdn", full_html=True)
+    # All-playbook comparison board for demo readability.
+    playbooks = [str(r.get("scene", PLAYBOOK_LABEL.get(str(r.get("playbook", "")), str(r.get("playbook", ""))))) for r in rows]
+    overview = make_subplots(
+        rows=2,
+        cols=2,
+        subplot_titles=(
+            "All Playbooks: Attack Success Rate",
+            "All Playbooks: Block Rate",
+            "All Playbooks: Counter/Fallback (Collab vs No-Collab)",
+            "All Playbooks: Avg Latency (ms)",
+        ),
+    )
+
+    overview.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("collab_attack", 0.0)) for r in rows],
+            name="collab_attack_success",
+            marker_color="#2a9d8f",
+        ),
+        row=1,
+        col=1,
+    )
+    overview.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("no_collab_attack", 0.0)) for r in rows],
+            name="no_collab_attack_success",
+            marker_color="#e76f51",
+        ),
+        row=1,
+        col=1,
+    )
+    overview.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("collab_block_rate", 0.0)) for r in rows],
+            name="collab_block_rate",
+            marker_color="#457b9d",
+        ),
+        row=1,
+        col=2,
+    )
+    overview.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("no_collab_block_rate", 0.0)) for r in rows],
+            name="no_collab_block_rate",
+            marker_color="#adb5bd",
+        ),
+        row=1,
+        col=2,
+    )
+    overview.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("collab_counter_rate", 0.0)) for r in rows],
+            name="collab_counter_rate",
+            marker_color="#ffb703",
+        ),
+        row=2,
+        col=1,
+    )
+    overview.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("no_collab_counter_rate", 0.0)) for r in rows],
+            name="no_collab_counter_rate",
+            marker_color="#ced4da",
+        ),
+        row=2,
+        col=1,
+    )
+    overview.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("collab_fallback_rate", 0.0)) for r in rows],
+            name="collab_fallback_rate",
+            marker_color="#fb8500",
+        ),
+        row=2,
+        col=1,
+    )
+    overview.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("no_collab_fallback_rate", 0.0)) for r in rows],
+            name="no_collab_fallback_rate",
+            marker_color="#adb5bd",
+        ),
+        row=2,
+        col=1,
+    )
+    overview.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("collab_latency", 0.0)) for r in rows],
+            name="collab_latency_ms",
+            marker_color="#1d3557",
+        ),
+        row=2,
+        col=2,
+    )
+    overview.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("no_collab_latency", 0.0)) for r in rows],
+            name="no_collab_latency_ms",
+            marker_color="#6c757d",
+        ),
+        row=2,
+        col=2,
+    )
+    overview.update_layout(template="plotly_white", barmode="group", height=1100)
+    overview.add_hline(
+        y=100,
+        line_dash="dash",
+        line_color="#d62828",
+        annotation_text="SLA < 100ms",
+        annotation_position="top left",
+        row=2,
+        col=2,
+    )
+
+    core = make_subplots(
+        rows=1,
+        cols=3,
+        subplot_titles=(
+            "Core 1: Attack Success",
+            "Core 2: Counter/Fallback Gap",
+            "Core 3: Latency vs SLA",
+        ),
+    )
+    core.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("collab_attack", 0.0)) for r in rows],
+            name="collab_attack",
+            marker_color="#2a9d8f",
+        ),
+        row=1,
+        col=1,
+    )
+    core.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("no_collab_attack", 0.0)) for r in rows],
+            name="no_collab_attack",
+            marker_color="#e76f51",
+        ),
+        row=1,
+        col=1,
+    )
+    core.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("collab_counter_rate", 0.0)) for r in rows],
+            name="collab_counter",
+            marker_color="#ffb703",
+        ),
+        row=1,
+        col=2,
+    )
+    core.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("collab_fallback_rate", 0.0)) for r in rows],
+            name="collab_fallback",
+            marker_color="#fb8500",
+        ),
+        row=1,
+        col=2,
+    )
+    core.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("no_collab_counter_rate", 0.0)) for r in rows],
+            name="no_collab_counter",
+            marker_color="#ced4da",
+        ),
+        row=1,
+        col=2,
+    )
+    core.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("no_collab_fallback_rate", 0.0)) for r in rows],
+            name="no_collab_fallback",
+            marker_color="#adb5bd",
+        ),
+        row=1,
+        col=2,
+    )
+    core.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("collab_latency", 0.0)) for r in rows],
+            name="collab_latency_ms",
+            marker_color="#1d3557",
+        ),
+        row=1,
+        col=3,
+    )
+    core.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("no_collab_latency", 0.0)) for r in rows],
+            name="no_collab_latency_ms",
+            marker_color="#6c757d",
+        ),
+        row=1,
+        col=3,
+    )
+    core.update_layout(template="plotly_white", barmode="group", height=540)
+    core.add_hline(
+        y=100,
+        line_dash="dash",
+        line_color="#d62828",
+        annotation_text="SLA < 100ms",
+        annotation_position="top left",
+        row=1,
+        col=3,
+    )
+
+    delta_fig = go.Figure()
+    delta_fig.add_trace(
+        go.Bar(
+            x=playbooks,
+            y=[float(r.get("attack_reduction", 0.0)) for r in rows],
+            marker_color=["#2a9d8f" if float(r.get("attack_reduction", 0.0)) >= 0 else "#d62828" for r in rows],
+            name="attack_reduction(no_collab-collab)",
+            text=[f"{float(r.get('attack_reduction', 0.0)):.3f}" for r in rows],
+            textposition="outside",
+        )
+    )
+    delta_fig.update_layout(
+        title="All Playbooks: Attack Success Reduction Delta",
+        template="plotly_white",
+        height=520,
+        yaxis_title="delta",
+        xaxis_title="playbook",
+        showlegend=False,
+    )
+    delta_fig.add_hline(y=0.0, line_dash="dash", line_color="#6c757d")
+
+    verdict_rows = []
+    for r in rows:
+        verdict_rows.append(
+            [
+                str(r.get("scene", PLAYBOOK_LABEL.get(str(r.get("playbook", "")), str(r.get("playbook", ""))))),
+                f"{float(r.get('collab_attack', 0.0)):.3f}",
+                f"{float(r.get('no_collab_attack', 0.0)):.3f}",
+                f"{float(r.get('attack_reduction', 0.0)):.3f}",
+                "PASS" if float(r.get("attack_reduction", 0.0)) > 0 else "CHECK",
+            ]
+        )
+
+    verdict_table = go.Figure(
+        data=[
+            go.Table(
+                header=dict(values=["playbook", "collab_attack", "no_collab_attack", "delta", "collab_counter", "no_collab_counter", "collab_fallback", "no_collab_fallback", "verdict"], fill_color="#264653", font=dict(color="white", size=12)),
+                cells=dict(
+                    values=(
+                        [
+                            [str(r.get("scene", PLAYBOOK_LABEL.get(str(r.get("playbook", "")), str(r.get("playbook", ""))))) for r in rows],
+                            [f"{float(r.get('collab_attack', 0.0)):.3f}" for r in rows],
+                            [f"{float(r.get('no_collab_attack', 0.0)):.3f}" for r in rows],
+                            [f"{float(r.get('attack_reduction', 0.0)):.3f}" for r in rows],
+                            [f"{float(r.get('collab_counter_rate', 0.0)):.3f}" for r in rows],
+                            [f"{float(r.get('no_collab_counter_rate', 0.0)):.3f}" for r in rows],
+                            [f"{float(r.get('collab_fallback_rate', 0.0)):.3f}" for r in rows],
+                            [f"{float(r.get('no_collab_fallback_rate', 0.0)):.3f}" for r in rows],
+                            ["PASS" if float(r.get("attack_reduction", 0.0)) > 0 else "CHECK" for r in rows],
+                        ]
+                        if rows
+                        else [[], [], [], [], [], [], [], [], []]
+                    ),
+                    fill_color="#f8f9fa",
+                    align="left",
+                ),
+            )
+        ]
+    )
+    verdict_table.update_layout(height=380, margin=dict(l=10, r=10, t=40, b=10), title="Scene Verdict Table")
+
+    conclusions = _build_conclusions(rows)
+    boundary = _boundary_analysis(rows)
+    conclusion_items = "".join(f"<li>{line}</li>" for line in conclusions)
+    limitation_items = "".join(f"<li>{line}</li>" for line in boundary.get("limitations", []))
+    flat_case_text = (
+        "、".join(
+            f"{PLAYBOOK_LABEL.get(pid, pid)}"
+            for pid in boundary.get("flat", [])
+        )
+        if boundary.get("flat", [])
+        else "无"
+    )
+    replay_html = _render_all_replays_html(experiment)
+
+    total_samples = int(experiment.get("total_samples", 0))
+    html = f"""
+    <!doctype html>
+    <html lang='zh-CN'>
+    <head>
+      <meta charset='utf-8'>
+      <meta name='viewport' content='width=device-width, initial-scale=1'>
+      <title>Playbook Demo Report</title>
+      <style>
+        body {{ font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; background: linear-gradient(120deg,#f8f9fa,#eef7ff); margin: 0; color: #1b263b; }}
+        .wrap {{ max-width: 1320px; margin: 0 auto; padding: 24px; }}
+        .hero {{ background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 8px 28px rgba(29,53,87,0.08); margin-bottom: 18px; }}
+        .hero h1 {{ margin: 0 0 8px; font-size: 28px; }}
+        .meta {{ color: #415a77; font-size: 14px; }}
+        .cards {{ display: grid; grid-template-columns: repeat(3, minmax(180px,1fr)); gap: 12px; margin: 14px 0 18px; }}
+        .card {{ background: #ffffff; border-radius: 12px; padding: 14px; border: 1px solid #e9ecef; box-shadow: 0 4px 14px rgba(0,0,0,0.04); }}
+        .card .k {{ font-size: 12px; color: #6c757d; }}
+        .card .v {{ font-size: 24px; font-weight: 700; color: #0b3d91; }}
+        .section {{ background: white; border-radius: 14px; padding: 16px; box-shadow: 0 8px 24px rgba(29,53,87,0.07); margin-bottom: 18px; }}
+        .section h2 {{ margin: 4px 0 10px; font-size: 20px; }}
+        .section ul {{ margin: 8px 0 0 18px; }}
+        .boundary {{ background: #fff7e6; border: 1px solid #ffd8a8; border-radius: 12px; padding: 12px; color: #7f5539; }}
+        .appendix {{ background: #f1f3f5; border: 1px solid #dee2e6; border-radius: 12px; padding: 12px; color: #343a40; }}
+        .replay-item {{ margin-bottom: 10px; background: #f8fbff; border: 1px solid #dbeafe; border-radius: 12px; }}
+        .replay-item summary {{ cursor: pointer; padding: 12px 14px; font-weight: 600; color: #0b3d91; }}
+        .replay-box {{ background: #f8fbff; border-top: 1px solid #dbeafe; border-radius: 0 0 12px 12px; padding: 14px; }}
+        .replay-table {{ width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }}
+        .replay-table th, .replay-table td {{ border: 1px solid #d6e2f0; padding: 8px; text-align: left; }}
+        .replay-table th {{ background: #e7f0fb; }}
+      </style>
+    </head>
+    <body>
+      <div class='wrap'>
+        <div class='hero'>
+          <h1>跨域协同防御实验演示报告</h1>
+          <div class='meta'>generated_at: {experiment.get('generated_at', 'N/A')} | total_samples: {total_samples}</div>
+          <div class='cards'>
+            <div class='card'><div class='k'>Playbook 数量</div><div class='v'>{len(rows)}</div></div>
+            <div class='card'><div class='k'>实验总样本</div><div class='v'>{total_samples}</div></div>
+            <div class='card'><div class='k'>协同优于非协同场景</div><div class='v'>{sum(1 for r in rows if float(r.get('attack_reduction',0))>0)}</div></div>
+          </div>
+        </div>
+
+        <div class='section'>
+          <h2>自动判断结论</h2>
+          <ul>{conclusion_items}</ul>
+        </div>
+
+                <div class='section'>
+                    <h2>实验局限性 / 边界 Case 说明</h2>
+                    <div class='boundary'>
+                        <p><b>边界得分公式：</b>{boundary.get('formula', 'N/A')}</p>
+                        <p><b>边界分析均值：</b>{boundary.get('avg', 0.0):.3f}（与上式一致）</p>
+                        <p><b>接近持平场景：</b>{flat_case_text}</p>
+                        <ul>{limitation_items}</ul>
+                    </div>
+                </div>
+
+                <div class='section'>
+                    <h2>核心三图</h2>
+                    {core.to_html(full_html=False, include_plotlyjs='cdn')}
+                </div>
+
+        <div class='section'>
+                    <h2>总览图</h2>
+                    {fig.to_html(full_html=False, include_plotlyjs=False)}
+        </div>
+
+        <div class='section'>
+                    <h2>全场景对比</h2>
+          {overview.to_html(full_html=False, include_plotlyjs=False)}
+          {delta_fig.to_html(full_html=False, include_plotlyjs=False)}
+          {verdict_table.to_html(full_html=False, include_plotlyjs=False)}
+        </div>
+
+        <div class='section'>
+                    <h2>单次样本链路回放</h2>
+          {replay_html}
+        </div>
+
+                <div class='section'>
+                    <h2>指标说明 / 附录</h2>
+                    <div class='appendix'>
+                        <p><b>FNR（False Negative Rate）</b>：漏报率，值越低越好。</p>
+                        <p><b>Adopt Rate</b>：反提案采纳率，反映协商机制的有效利用程度。</p>
+                        <p><b>Counter/Fallback Rate</b>：协商博弈触发强度；非协同通常应接近 0。</p>
+                        <p><b>SLA Threshold</b>：工业级阻断时延红线，目标 < 100ms。</p>
+                    </div>
+                </div>
+      </div>
+    </body>
+    </html>
+    """
+
+    output.write_text(html, encoding="utf-8")
     return output
 
 

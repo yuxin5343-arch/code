@@ -36,6 +36,7 @@ risk_min_gain:
 domain_min_gain_offset:
   core: 0
   office: 0
+  portal: 0
 
 # Confidence-aware filtering for counter proposals.
 confidence_policy:

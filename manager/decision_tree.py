@@ -9,7 +9,7 @@ class DecisionTreeModel:
     @staticmethod
     def _ordered_domains(involved_domains: List[str]) -> List[str]:
         """Use stable semantic ordering so joint-plan actions hit expected domains."""
-        preferred = ["office", "core"]
+        preferred = ["office", "portal", "core"]
         seen = set()
         ordered: List[str] = []
 
@@ -30,6 +30,16 @@ class DecisionTreeModel:
             return []
 
         domains = self._ordered_domains(involved_domains)
+        portal_to_office = "portal" in domains and "office" in domains and incident_type == "lateral_penetration"
+
+        # Portal is identified as the stepping-stone domain to office, so add
+        # source-side blocking in portal to cut the external kill-chain.
+        if portal_to_office and mode in {"strict", "balanced"}:
+            return [
+                {"domain": "office", "objective": "block_ip"},
+                {"domain": "portal", "objective": "block_ip"},
+            ]
+
         if mode == "strict" and incident_type == "lateral_penetration":
             return [
                 {"domain": domains[0], "objective": "isolate_host"},

@@ -33,6 +33,7 @@ from simulation.report_generator import generate_report
 MANAGER = os.getenv("MANAGER_SERVICE", "http://127.0.0.1:8000")
 OFFICE_EXECUTOR = os.getenv("EXECUTOR_OFFICE_SERVICE", "http://127.0.0.1:8101")
 CORE_EXECUTOR = os.getenv("EXECUTOR_CORE_SERVICE", "http://127.0.0.1:8102")
+PORTAL_EXECUTOR = os.getenv("EXECUTOR_PORTAL_SERVICE", "http://127.0.0.1:8103")
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 
 EXPERIMENT_SEED = int(os.getenv("EXPERIMENT_SEED", "20260327"))
@@ -56,6 +57,16 @@ def _print(msg: str) -> None:
 
 def _seed_for(mode: str, playbook_id: str, run_index: int) -> int:
     return EXPERIMENT_SEED + (17 if mode == "oneshot_collab" else 53) + (abs(hash(playbook_id)) % 10000) + run_index
+
+
+def _endpoint_for_domain(domain: str) -> str:
+    if domain == "office":
+        return OFFICE_EXECUTOR
+    if domain == "core":
+        return CORE_EXECUTOR
+    if domain == "portal":
+        return PORTAL_EXECUTOR
+    return CORE_EXECUTOR
 
 
 def parse_dispatch_results(raw_items: List) -> List[Dict]:
@@ -193,6 +204,7 @@ async def wait_services_ready(client: AsyncAPIClient, retries: int = 30, interva
         f"{MANAGER}/health",
         f"{OFFICE_EXECUTOR}/health",
         f"{CORE_EXECUTOR}/health",
+        f"{PORTAL_EXECUTOR}/health",
     ]
     for _ in range(retries):
         ok = True
@@ -212,13 +224,14 @@ async def reset_runtime_state(client: AsyncAPIClient) -> None:
     await client.post_json(f"{MANAGER}/debug/reset-state", {})
     await client.post_json(f"{OFFICE_EXECUTOR}/debug/reset-state", {})
     await client.post_json(f"{CORE_EXECUTOR}/debug/reset-state", {})
+    await client.post_json(f"{PORTAL_EXECUTOR}/debug/reset-state", {})
 
 
 async def apply_preconditions(client: AsyncAPIClient, playbook: Playbook) -> None:
     for domain, cfg in playbook.preconditions.items():
         resource_cfg = cfg.get("resource_status", {}) if isinstance(cfg, dict) else {}
         report_manager = bool(cfg.get("report_manager", True)) if isinstance(cfg, dict) else True
-        endpoint = OFFICE_EXECUTOR if domain == "office" else CORE_EXECUTOR
+        endpoint = _endpoint_for_domain(str(domain))
         await client.post_json(
             f"{endpoint}/debug/resource-status",
             {"resource_status": resource_cfg, "report_manager": report_manager},
@@ -245,7 +258,7 @@ async def inject_logs_for_playbook(
     }
 
     for log in logs:
-        endpoint = OFFICE_EXECUTOR if log.get("domain") == "office" else CORE_EXECUTOR
+        endpoint = _endpoint_for_domain(str(log.get("domain", "core")))
         sleep_jitter = max(0.0, jitter_rng.uniform(0, INTER_EVENT_SLEEP_JITTER_MS) / 1000.0)
         await asyncio.sleep(sleep_jitter)
 
@@ -324,6 +337,7 @@ async def run_playbook_once(playbook: Playbook, mode: str, collab_enabled: bool,
 
     intent_status_counts = _status_counter(intent_statuses)
     fallback_task_count = 0
+    adopt_counter_task_count = 0
     downgrade_counter_task_count = 0
     downgrade_adopt_task_count = 0
     low_confidence_reject_task_count = 0
@@ -332,6 +346,8 @@ async def run_playbook_once(playbook: Playbook, mode: str, collab_enabled: bool,
         consensus_reason = str(constraints.get("consensus_reason", ""))
         if consensus_reason in {"fallback_safe_policy", "fallback_min_gain_policy"}:
             fallback_task_count += 1
+        if consensus_reason == "adopt_counter_proposal":
+            adopt_counter_task_count += 1
         is_downgrade = bool(constraints.get("counter_is_downgrade", False))
         if is_downgrade:
             downgrade_counter_task_count += 1
@@ -345,7 +361,9 @@ async def run_playbook_once(playbook: Playbook, mode: str, collab_enabled: bool,
             low_confidence_reject_task_count += 1
 
     counter_triggered = any(s in {"counter_proposal", "reject"} for s in intent_statuses)
-    adopted_counter = intent_objectives != consensus_objectives
+    # 采纳反提案以终裁原因为准，避免将其它策略改写误计为“采纳反提案”。
+    adopted_counter = adopt_counter_task_count > 0
+    counter_task_count = int(intent_status_counts.get("counter_proposal", 0)) + int(intent_status_counts.get("reject", 0))
     intent_accept_rate = round(sum(1 for s in intent_statuses if s == "accept") / len(intent_statuses), 3) if intent_statuses else 0.0
 
     analysis = decision.get("analysis", {}) if isinstance(decision, dict) else {}
@@ -376,6 +394,8 @@ async def run_playbook_once(playbook: Playbook, mode: str, collab_enabled: bool,
         "intent_accept_rate": intent_accept_rate,
         "counter_triggered": counter_triggered,
         "adopted_counter": adopted_counter,
+        "counter_task_count": counter_task_count,
+        "adopt_counter_task_count": adopt_counter_task_count,
         "fallback_task_count": fallback_task_count,
         "fallback_triggered": fallback_task_count > 0,
         "downgrade_counter_task_count": downgrade_counter_task_count,
@@ -475,9 +495,10 @@ def aggregate_runs(samples: List[Dict]) -> Dict:
         for key in intent_counts
     }
 
-    counter_total = sum(1 for s in samples if bool(s.get("counter_triggered", False)))
-    adopt_counter_total = sum(1 for s in samples if bool(s.get("adopted_counter", False)))
-    fallback_total = sum(1 for s in samples if bool(s.get("fallback_triggered", False)))
+    # 统一为任务级计数口径，避免样本级布尔计数造成跨指标不可比。
+    counter_total = sum(int(s.get("counter_task_count", 0)) for s in samples)
+    adopt_counter_total = sum(int(s.get("adopt_counter_task_count", 0)) for s in samples)
+    fallback_total = sum(int(s.get("fallback_task_count", 0)) for s in samples)
     calibrated_total = sum(1 for s in samples if bool(s.get("analysis_domain_weight_calibrated", False)))
     downgrade_counter_total = sum(int(s.get("downgrade_counter_task_count", 0)) for s in samples)
     downgrade_adopt_total = sum(int(s.get("downgrade_adopt_task_count", 0)) for s in samples)
@@ -509,12 +530,12 @@ def aggregate_runs(samples: List[Dict]) -> Dict:
         "avg_latency_ms": int(mean(int(s.get("avg_latency_ms", 0)) for s in samples)),
         "containment_time_ms": int(mean(int(s.get("containment_time_ms", 0)) for s in samples)),
         "decision_elapsed_ms": int(mean(int(s.get("decision_elapsed_ms", 0)) for s in samples)),
-        "counter_rate": round(counter_total / len(samples), 3),
-        "adopt_counter_rate": round(adopt_counter_total / len(samples), 3),
+        "counter_rate": round(counter_total / total_intent_status, 3) if total_intent_status else 0.0,
+        "adopt_counter_rate": round(adopt_counter_total / counter_total, 3) if counter_total else 0.0,
         "counter_total": counter_total,
         "adopt_counter_total": adopt_counter_total,
         "fallback_total": fallback_total,
-        "fallback_rate": round(fallback_total / len(samples), 3),
+        "fallback_rate": round(fallback_total / counter_total, 3) if counter_total else 0.0,
         "intent_accept_rate": round(mean(float(s.get("intent_accept_rate", 0.0)) for s in samples), 3),
         "intent_statuses": {
             "counts": intent_counts,
@@ -585,6 +606,7 @@ async def main() -> None:
     _print(f"manager={MANAGER}")
     _print(f"office_executor={OFFICE_EXECUTOR}")
     _print(f"core_executor={CORE_EXECUTOR}")
+    _print(f"portal_executor={PORTAL_EXECUTOR}")
     _print(f"seed={EXPERIMENT_SEED}, runs_per_playbook={RUNS_PER_PLAYBOOK}")
 
     client = AsyncAPIClient(timeout=20.0)
@@ -656,6 +678,7 @@ async def main() -> None:
         "manager_service": MANAGER,
         "office_executor_service": OFFICE_EXECUTOR,
         "core_executor_service": CORE_EXECUTOR,
+        "portal_executor_service": PORTAL_EXECUTOR,
         "modes": [mode for mode, _ in MODES],
     }
 

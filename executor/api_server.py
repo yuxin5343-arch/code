@@ -33,6 +33,8 @@ def build_executor_from_env() -> "ExecutorAgent":
     max_block_actions = int(os.getenv("EXECUTOR_MAX_BLOCK_ACTIONS", "5"))
     failure_threshold = int(os.getenv("EXECUTOR_FAILURE_THRESHOLD", "3"))
     whitelist_assets_raw = os.getenv("EXECUTOR_WHITELIST_ASSETS", "")
+    if not whitelist_assets_raw:
+        whitelist_assets_raw = os.getenv("CRITICAL_ASSETS", "")
     whitelist_assets = [s.strip() for s in whitelist_assets_raw.split(",") if s.strip()]
     return ExecutorAgent(
         executor_id=executor_id,
@@ -122,6 +124,16 @@ class ExecutorAgent(BaseExecutor):
 
         if "consecutive_failures" in patch:
             status["consecutive_failures"] = max(0, int(patch.get("consecutive_failures", 0)))
+
+        if "business_whitelist_assets" in patch:
+            assets_raw = patch.get("business_whitelist_assets", [])
+            if isinstance(assets_raw, str):
+                parsed_assets = [s.strip() for s in assets_raw.split(",") if s.strip()]
+            elif isinstance(assets_raw, list):
+                parsed_assets = [str(s).strip() for s in assets_raw if str(s).strip()]
+            else:
+                parsed_assets = []
+            status["business_whitelist_assets"] = sorted(set(parsed_assets))
 
         return dict(status)
 

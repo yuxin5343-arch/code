@@ -21,14 +21,14 @@ class TaskParser:
         consecutive_failures = int(resource_status.get("consecutive_failures", 0))
         failure_threshold = int(resource_status.get("failure_threshold", 3))
 
-        if objective in {"tighten_acl", "isolate_host"} and (
+        if objective in {"block_ip", "block_traffic", "tighten_acl", "isolate_host"} and (
             asset_level == "critical" or (asset_id and asset_id in whitelist_assets)
         ):
             return {
                 "decision": "counter_proposal",
                 "reason_code": "CRITICAL_ASSET_PROTECTED",
-                "message": "critical asset should not be isolated directly",
-                "proposed_action": "degrade_traffic",
+                "message": "critical business asset should not be blocked directly",
+                "proposed_action": "observe_alert",
             }
 
         if objective in {"block_ip", "block_traffic", "tighten_acl", "isolate_host"} and max_block_actions > 0:
