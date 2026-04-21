@@ -33,6 +33,9 @@ class Playbook:
     title: str
     objective: str
     notes: str
+    attack_scope: str = "cross_domain"
+    stealth_level: str = "high"
+    complexity_tier: str = "L3"
     preconditions: Dict[str, Dict] = field(default_factory=dict)
     events: List[PlaybookEvent] = field(default_factory=list)
 
@@ -87,6 +90,9 @@ def load_playbooks() -> List[Playbook]:
             title="场景A：无分歧协同（Happy Path）",
             objective="验证协商链路闭环与可接受时延",
             notes="普通资产，不触发关键资产保护或资源约束。",
+            attack_scope="cross_domain",
+            stealth_level="medium",
+            complexity_tier="L2",
             events=[
                 PlaybookEvent(
                     domain="office",
@@ -121,6 +127,9 @@ def load_playbooks() -> List[Playbook]:
             title="场景B：三节点微弱信号叠加提权",
             objective="验证 Portal -> Office -> Core 的弱信号链可提前触发全局提权阻断",
             notes="黑客先在 Portal 低危扫描，再对 Office 低危爆破，最后探测 Core；三节点弱信号叠加后应提前提权，体现防御前置。",
+            attack_scope="cross_domain",
+            stealth_level="high",
+            complexity_tier="L3",
             events=[
                 PlaybookEvent(
                     domain="portal",
@@ -168,6 +177,9 @@ def load_playbooks() -> List[Playbook]:
             title="场景C：关键资产保护触发反提案",
             objective="验证执行器依据局部代价约束触发反提案",
             notes="Core 资产标记 critical，隔离/ACL 收紧会触发 counter_proposal。",
+            attack_scope="cross_domain",
+            stealth_level="medium",
+            complexity_tier="L2",
             preconditions={
                 "office": {
                     "resource_status": {
@@ -210,6 +222,9 @@ def load_playbooks() -> List[Playbook]:
             title="场景D：误报拦截（纯噪音）",
             objective="验证协同可识别低置信度跨域噪音并拒绝阻断",
             notes="注入高频但良性的噪音告警，跨域无关联边，Manager 应抑制阻断动作。",
+            attack_scope="cross_domain",
+            stealth_level="low",
+            complexity_tier="L1",
             events=[
                 PlaybookEvent(
                     domain="office",
@@ -260,6 +275,9 @@ def load_playbooks() -> List[Playbook]:
             title="场景E：资源受限协同",
             objective="验证资源预算耗尽时系统仍能给出兜底决策",
             notes="先耗尽 office 的 block 预算，再注入攻击。",
+            attack_scope="cross_domain",
+            stealth_level="medium",
+            complexity_tier="L2",
             preconditions={
                 "office": {
                     "resource_status": {
@@ -302,6 +320,9 @@ def load_playbooks() -> List[Playbook]:
             title="场景F：门户跳板与跨域兜底协同",
             objective="验证 office 关键资产拒绝后，Manager 可改派 portal 做源头阻断",
             notes="Portal 先被公网攻破并作为跳板攻击 Office OA；Office 因关键网关白名单拒绝 block_ip，Manager 触发 portal 侧兜底。",
+            attack_scope="cross_domain",
+            stealth_level="high",
+            complexity_tier="L3",
             preconditions={
                 "office": {
                     "resource_status": {
@@ -349,6 +370,43 @@ def load_playbooks() -> List[Playbook]:
                     suspicious=True,
                     asset_level="normal",
                     asset_id="office-oa-app",
+                ),
+            ],
+        ),
+        Playbook(
+            playbook_id="G_single_domain_baseline_validation",
+            title="场景G：单域显著攻击（基线主场验证）",
+            objective="验证单域高显著攻击下传统单点防御可有效阻断",
+            notes="仅在 Portal 域活动，不发生跨域横向移动；用于证明基线在主场场景可工作。",
+            attack_scope="single_domain",
+            stealth_level="low",
+            complexity_tier="L1",
+            events=[
+                PlaybookEvent(
+                    domain="portal",
+                    device_type="ids",
+                    event_type="aggressive_port_scan",
+                    attack_type="port_scan",
+                    stage="recon",
+                    severity="high",
+                    src_ip="61.12.99.201",
+                    dst_ip="172.30.10.30",
+                    suspicious=True,
+                    asset_level="normal",
+                    asset_id="portal-edge-2",
+                ),
+                PlaybookEvent(
+                    domain="portal",
+                    device_type="firewall",
+                    event_type="single_domain_bruteforce",
+                    attack_type="bruteforce",
+                    stage="initial_access",
+                    severity="critical",
+                    src_ip="61.12.99.201",
+                    dst_ip="172.30.10.31",
+                    suspicious=True,
+                    asset_level="normal",
+                    asset_id="portal-auth-1",
                 ),
             ],
         ),

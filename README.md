@@ -41,7 +41,7 @@ code-a/
 │   ├── async_client.py                   # 异步 HTTP 客户端封装
 │   └── message_queue.py                  # 内存消息队列实现
 ├── simulation/                           # 剧本实验与报告生成
-│   ├── playbooks.py                      # A-E 场景定义与事件物化
+│   ├── playbooks.py                      # A-G 场景定义与事件物化
 │   ├── experiment_runner.py              # 批量实验执行、指标聚合与结果落盘
 │   ├── report_generator.py               # Plotly 报告绘制与 HTML 导出
 │   ├── minimal_negotiation_smoke.py      # 一轮协商最小联调脚本
@@ -93,9 +93,9 @@ chmod 775 results
 
 ### Playbook 场景
 
-当前为 6 个核心场景，双模式对照：
+当前为 7 个核心场景，双模式对照：
 - 模式 1：oneshot_collab（一轮协同）
-- 模式 2：no_collab（无协同）
+- 模式 2：single_domain_baseline（可执行单域基线，不启用跨域协同改写）
 
 场景定义：
 - A_happy_path：无分歧协同，验证闭环时延与阻断效果。
@@ -104,10 +104,20 @@ chmod 775 results
 - E_false_positive_noise：误报噪音场景，验证低置信度拒绝阻断。
 - C_budget_exhaustion：资源预算受限下的反提案协商与兜底动作（fallback）。
 - F_portal_bridge_fallback：Portal 失陷后跳板攻击 Office，Office 因关键资产拒绝阻断，Manager 改派 Portal 源头封堵。
+- G_single_domain_baseline_validation：单域高显著攻击（仅 Portal 域），用于验证传统单点基线在主场场景可有效阻断。
 
 默认样本规模：
 - 每场景每模式 50 次
-- 总样本数 = 6 * 50 * 2 = 600
+- 总样本数 = 7 * 50 * 2 = 700
+
+难度分层建议：
+- L1：单域高显著攻击（传统基线主场）
+- L2：跨域中等复杂链路
+- L3：高隐蔽跨域链路（APT 风格）
+
+论文叙事建议：
+- 强调 L3 场景模拟的是高级持续性威胁（APT）与高度隐蔽跨域攻击，常规单点检测在该类场景下性能下降属于预期现象。
+- 同时给出 L1 场景结果，证明基线在其主场并非失效，而是跨域复杂场景适应性不足。
 
 ### 常用参数
 

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 """Playbook-driven experiment runner.
 
-Runs four deterministic playbooks under two modes:
+Runs deterministic playbooks under two modes:
 - one-shot collaboration (enforce actions)
-- no-collaboration baseline (observe only)
+- single-domain baseline (enforce local actions without cross-domain collaboration)
 
 Each playbook is repeated N times with tiny jitter to collect statistical samples.
 """
@@ -41,9 +41,9 @@ RUNS_PER_PLAYBOOK = int(os.getenv("PLAYBOOK_RUNS", "50"))
 PLAYBOOK_JITTER_MS = int(os.getenv("PLAYBOOK_JITTER_MS", "120"))
 INTER_EVENT_SLEEP_JITTER_MS = int(os.getenv("INTER_EVENT_SLEEP_JITTER_MS", "60"))
 
-MODES: List[Tuple[str, bool]] = [
-    ("oneshot_collab", True),
-    ("no_collab", False),
+MODES: List[Tuple[str, bool, bool]] = [
+    ("oneshot_collab", True, True),
+    ("single_domain_baseline", True, False),
 ]
 
 
@@ -56,7 +56,12 @@ def _print(msg: str) -> None:
 
 
 def _seed_for(mode: str, playbook_id: str, run_index: int) -> int:
-    return EXPERIMENT_SEED + (17 if mode == "oneshot_collab" else 53) + (abs(hash(playbook_id)) % 10000) + run_index
+    mode_offsets = {
+        "oneshot_collab": 17,
+        "single_domain_baseline": 53,
+        "no_collab": 71,
+    }
+    return EXPERIMENT_SEED + mode_offsets.get(mode, 97) + (abs(hash(playbook_id)) % 10000) + run_index
 
 
 def _endpoint_for_domain(domain: str) -> str:
@@ -194,7 +199,7 @@ def _is_weak_signal_missed_detection(playbook_id: str, mode: str, attack_metrics
     """
     return (
         playbook_id == "D_cross_domain_weak_signal"
-        and mode == "no_collab"
+        and mode in {"single_domain_baseline", "no_collab"}
         and bool(attack_metrics.get("attack_success", True))
     )
 
@@ -283,7 +288,13 @@ async def inject_logs_for_playbook(
     return stats
 
 
-async def run_playbook_once(playbook: Playbook, mode: str, collab_enabled: bool, run_index: int) -> Dict:
+async def run_playbook_once(
+    playbook: Playbook,
+    mode: str,
+    collab_enabled: bool,
+    cross_domain_collab: bool,
+    run_index: int,
+) -> Dict:
     client = AsyncAPIClient(timeout=20.0)
     seed = _seed_for(mode=mode, playbook_id=playbook.playbook_id, run_index=run_index)
     rng = random.Random(seed)
@@ -297,7 +308,11 @@ async def run_playbook_once(playbook: Playbook, mode: str, collab_enabled: bool,
     t0 = time.perf_counter()
     decision = await client.post_json(
         f"{MANAGER}/decision/trigger",
-        {"enforce_actions": collab_enabled, "clear_alerts": True},
+        {
+            "enforce_actions": collab_enabled,
+            "cross_domain_collab": cross_domain_collab,
+            "clear_alerts": True,
+        },
     )
     decision_elapsed_ms = int((time.perf_counter() - t0) * 1000)
 
@@ -377,10 +392,14 @@ async def run_playbook_once(playbook: Playbook, mode: str, collab_enabled: bool,
         "seed": seed,
         "mode": mode,
         "collaboration_enabled": collab_enabled,
+        "cross_domain_collab": cross_domain_collab,
         "playbook_id": playbook.playbook_id,
         "playbook_title": playbook.title,
         "playbook_objective": playbook.objective,
         "playbook_notes": playbook.notes,
+        "playbook_attack_scope": playbook.attack_scope,
+        "playbook_stealth_level": playbook.stealth_level,
+        "playbook_complexity_tier": playbook.complexity_tier,
         "decision_elapsed_ms": decision_elapsed_ms,
         "analysis_risk_level": risk_level,
         "analysis_base_risk_level": base_risk_level,
@@ -564,14 +583,20 @@ def aggregate_runs(samples: List[Dict]) -> Dict:
 
 
 def build_group_summary(samples: List[Dict]) -> Dict:
-    by_mode: Dict[str, List[Dict]] = {m: [] for m, _ in MODES}
-    by_mode_playbook: Dict[str, Dict[str, List[Dict]]] = {m: {} for m, _ in MODES}
+    by_mode: Dict[str, List[Dict]] = {m: [] for m, _, _ in MODES}
+    by_mode_playbook: Dict[str, Dict[str, List[Dict]]] = {m: {} for m, _, _ in MODES}
+    by_mode_tier: Dict[str, Dict[str, List[Dict]]] = {m: {} for m, _, _ in MODES}
+    by_mode_scope: Dict[str, Dict[str, List[Dict]]] = {m: {} for m, _, _ in MODES}
 
     for sample in samples:
         mode = str(sample.get("mode", "unknown"))
         playbook_id = str(sample.get("playbook_id", "unknown"))
+        tier = str(sample.get("playbook_complexity_tier", "unknown"))
+        scope = str(sample.get("playbook_attack_scope", "unknown"))
         by_mode.setdefault(mode, []).append(sample)
         by_mode_playbook.setdefault(mode, {}).setdefault(playbook_id, []).append(sample)
+        by_mode_tier.setdefault(mode, {}).setdefault(tier, []).append(sample)
+        by_mode_scope.setdefault(mode, {}).setdefault(scope, []).append(sample)
 
     mode_summary = {mode: aggregate_runs(items) for mode, items in by_mode.items()}
 
@@ -579,9 +604,19 @@ def build_group_summary(samples: List[Dict]) -> Dict:
     for mode, pb in by_mode_playbook.items():
         mode_playbook_summary[mode] = {playbook_id: aggregate_runs(items) for playbook_id, items in pb.items()}
 
+    mode_tier_summary: Dict[str, Dict[str, Dict]] = {}
+    for mode, tier_groups in by_mode_tier.items():
+        mode_tier_summary[mode] = {tier: aggregate_runs(items) for tier, items in tier_groups.items()}
+
+    mode_scope_summary: Dict[str, Dict[str, Dict]] = {}
+    for mode, scope_groups in by_mode_scope.items():
+        mode_scope_summary[mode] = {scope: aggregate_runs(items) for scope, items in scope_groups.items()}
+
     return {
         "by_mode": mode_summary,
         "by_mode_playbook": mode_playbook_summary,
+        "by_mode_tier": mode_tier_summary,
+        "by_mode_scope": mode_scope_summary,
     }
 
 
@@ -620,7 +655,7 @@ async def main() -> None:
     total_runs = len(playbooks) * RUNS_PER_PLAYBOOK * len(MODES)
     finished = 0
 
-    for mode, collab_enabled in MODES:
+    for mode, collab_enabled, cross_domain_collab in MODES:
         for playbook in playbooks:
             _print(f"running mode={mode} playbook={playbook.playbook_id} repeats={RUNS_PER_PLAYBOOK}")
             for run_idx in range(1, RUNS_PER_PLAYBOOK + 1):
@@ -628,6 +663,7 @@ async def main() -> None:
                     playbook=playbook,
                     mode=mode,
                     collab_enabled=collab_enabled,
+                    cross_domain_collab=cross_domain_collab,
                     run_index=run_idx,
                 )
                 all_samples.append(sample)
@@ -648,7 +684,7 @@ async def main() -> None:
     expected_samples = len(playbooks) * RUNS_PER_PLAYBOOK
     mode_samples = {
         mode: int(summary["by_mode"].get(mode, {}).get("samples", 0))
-        for mode, _ in MODES
+        for mode, _, _ in MODES
     }
 
     report = {
@@ -663,6 +699,9 @@ async def main() -> None:
                 "title": pb.title,
                 "objective": pb.objective,
                 "notes": pb.notes,
+                "attack_scope": pb.attack_scope,
+                "stealth_level": pb.stealth_level,
+                "complexity_tier": pb.complexity_tier,
             }
             for pb in playbooks
         ],
@@ -679,14 +718,14 @@ async def main() -> None:
         "office_executor_service": OFFICE_EXECUTOR,
         "core_executor_service": CORE_EXECUTOR,
         "portal_executor_service": PORTAL_EXECUTOR,
-        "modes": [mode for mode, _ in MODES],
+        "modes": [mode for mode, _, _ in MODES],
     }
 
     json_path, html_path = persist_experiment(report, metadata)
 
     _print(f"done total_samples={len(all_samples)} expected={report['expected_samples']}")
-    _print(f"oneshot_collab_samples={mode_samples.get('oneshot_collab', 0)}")
-    _print(f"no_collab_samples={mode_samples.get('no_collab', 0)}")
+    for mode, _, _ in MODES:
+        _print(f"{mode}_samples={mode_samples.get(mode, 0)}")
     _print(f"json={json_path}")
     _print(f"html={html_path}")
 

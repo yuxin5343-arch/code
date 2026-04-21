@@ -11,6 +11,16 @@ from typing import Any, Dict
 PLAYBOOK_ID = "F_portal_bridge_fallback"
 
 
+def _pick_baseline_mode(data: Dict[str, Any]) -> str:
+    by_mode_playbook = data.get("summary", {}).get("by_mode_playbook", {})
+    if not isinstance(by_mode_playbook, dict):
+        return "single_domain_baseline"
+    for mode in ("single_domain_baseline", "no_collab"):
+        if mode in by_mode_playbook:
+            return mode
+    return "single_domain_baseline"
+
+
 def _latest_result_file() -> str:
     files = sorted(glob.glob("results/experiment_*.json"), key=os.path.getmtime)
     if not files:
@@ -56,7 +66,8 @@ def main() -> int:
         data = json.load(f)
 
     collab = _get_f_metrics(data, "oneshot_collab")
-    no_collab = _get_f_metrics(data, "no_collab")
+    baseline_mode = _pick_baseline_mode(data)
+    no_collab = _get_f_metrics(data, baseline_mode)
 
     if not collab or not no_collab:
         print("FAIL: Missing Playbook F metrics in result file")
@@ -81,9 +92,10 @@ def main() -> int:
 
     print(f"file={path}")
     print(f"playbook={PLAYBOOK_ID}")
+    print(f"baseline_mode={baseline_mode}")
     print("--- metrics ---")
     print(f"oneshot_collab.attack_success_rate={c_attack:.3f}")
-    print(f"no_collab.attack_success_rate={n_attack:.3f}")
+    print(f"{baseline_mode}.attack_success_rate={n_attack:.3f}")
     print(f"oneshot_collab.counter_rate={c_counter:.3f}")
     print(f"oneshot_collab.fallback_rate={c_fallback:.3f}")
     print(f"oneshot_collab.block_rate={c_block:.3f}")

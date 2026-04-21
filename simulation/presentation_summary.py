@@ -21,6 +21,7 @@ PLAYBOOK_ORDER = [
     "E_false_positive_noise",
     "C_budget_exhaustion",
     "F_portal_bridge_fallback",
+    "G_single_domain_baseline_validation",
 ]
 
 PLAYBOOK_LABEL = {
@@ -30,7 +31,15 @@ PLAYBOOK_LABEL = {
     "E_false_positive_noise": "场景D",
     "C_budget_exhaustion": "场景E",
     "F_portal_bridge_fallback": "场景F",
+    "G_single_domain_baseline_validation": "场景G",
 }
+
+
+def _pick_baseline_mode(bmp: Dict[str, Any]) -> str:
+    for mode in ("single_domain_baseline", "no_collab"):
+        if mode in bmp:
+            return mode
+    return "single_domain_baseline"
 
 
 def _latest_result_file() -> Path:
@@ -50,7 +59,8 @@ def _metric(obj: Dict[str, Any], key: str) -> float:
 def _rows(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     bmp = data.get("summary", {}).get("by_mode_playbook", {})
     collab = bmp.get("oneshot_collab", {}) if isinstance(bmp, dict) else {}
-    no_collab = bmp.get("no_collab", {}) if isinstance(bmp, dict) else {}
+    baseline_mode = _pick_baseline_mode(bmp if isinstance(bmp, dict) else {})
+    no_collab = bmp.get(baseline_mode, {}) if isinstance(bmp, dict) else {}
     ids = [pid for pid in PLAYBOOK_ORDER if pid in set(collab.keys()) | set(no_collab.keys())]
 
     rows: List[Dict[str, Any]] = []
@@ -69,6 +79,7 @@ def _rows(data: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "counter": _metric(c, "counter_rate"),
                 "fallback": _metric(c, "fallback_rate"),
                 "block": _metric(c, "block_rate"),
+                "baseline_mode": baseline_mode,
             }
         )
     return rows
@@ -86,9 +97,10 @@ def main() -> None:
     rows = _rows(data)
     print(f"[demo] source={path}")
     print(f"[demo] total_samples={int(data.get('total_samples', 0))}")
+    baseline_mode = rows[0].get("baseline_mode", "single_domain_baseline") if rows else "single_domain_baseline"
     print("\n[demo] playbook verdicts")
-    print("scene                                  collab_attack  no_collab_attack  delta    verdict")
-    print("-----------------------------------------------------------------------------------------")
+    print(f"scene                                  collab_attack  {baseline_mode}_attack  delta    verdict")
+    print("----------------------------------------------------------------------------------------------")
     for r in rows:
         verdict = "PASS" if float(r["delta"]) > 0 else "CHECK"
         print(

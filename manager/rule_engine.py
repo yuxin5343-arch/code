@@ -187,7 +187,9 @@ class RuleEngine:
         if cross_domain and has_high:
             return "high", "medium"
         if has_high:
-            return "medium", "medium"
+            # Single-domain high-severity incidents should still trigger a meaningful local defense,
+            # otherwise the baseline degenerates into observe-only on its own turf.
+            return "high", "high"
         if any(level == "medium" for level in levels):
             return "medium", "low"
         return "low", "low"

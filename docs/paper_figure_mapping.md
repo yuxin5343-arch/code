@@ -11,17 +11,17 @@
 
 ## 图表到论点映射
 
-### 1) Attack Success Rate (Collab vs No-Collab)
-- 图意：协同模式与无协同模式的攻击成功率对比。
+### 1) Attack Success Rate (Collab vs Baseline)
+- 图意：协同模式与单域可执行基线（single_domain_baseline）的攻击成功率对比。
 - 支撑论点：协同闭环可显著降低攻击达成概率。
 - 论文句式：
-  - 如图X(a)所示，oneshot_collab 的攻击成功率显著低于 no_collab，说明跨域协同决策与执行反馈形成了有效阻断闭环。
+  - 如图X(a)所示，oneshot_collab 的攻击成功率显著低于 single_domain_baseline，说明跨域协同决策与执行反馈在复杂链路中形成了更有效阻断闭环。
 
 ### 2) False Negative Rate on Playbook D
 - 图意：弱信号场景 D 的漏报率对比。
 - 支撑论点：跨域融合可降低弱信号漏报。
 - 论文句式：
-  - 图X(b)显示，在 D 场景下 no_collab 的漏报率明显高于 oneshot_collab，验证了跨域证据融合对弱信号识别的增益。
+  - 图X(b)显示，在 D 场景下 single_domain_baseline 的漏报率明显高于 oneshot_collab，验证了跨域证据融合对弱信号识别的增益。
 
 ### 3) Intent Status Ratios (Collab)
 - 图意：一轮协商中 accept/counter/reject 的比例。
@@ -82,4 +82,4 @@
 
 - 不要只报单点数值，建议同时报告差值或比例变化。
 - 结论中区分“机制接入”与“机制生效”（尤其是校准相关指标）。
-- 对 no_collab 结果强调其作为基线，不把其解释成缺陷。
+- 对 single_domain_baseline 结果强调其作为“传统单点防御基线”，并补充 L1 场景证明其在主场可生效，避免“基线不可用”的公平性质疑。

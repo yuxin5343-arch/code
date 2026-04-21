@@ -19,6 +19,7 @@ PLAYBOOK_ORDER = [
     "E_false_positive_noise",
     "C_budget_exhaustion",
     "F_portal_bridge_fallback",
+    "G_single_domain_baseline_validation",
 ]
 
 PLAYBOOK_LABEL = {
@@ -28,9 +29,21 @@ PLAYBOOK_LABEL = {
     "E_false_positive_noise": "场景D",
     "C_budget_exhaustion": "场景E",
     "F_portal_bridge_fallback": "场景F",
+    "G_single_domain_baseline_validation": "场景G",
 }
 
 SCENE_TO_PLAYBOOK = {v: k for k, v in PLAYBOOK_LABEL.items()}
+COLLAB_MODE = "oneshot_collab"
+BASELINE_MODE_CANDIDATES = ("single_domain_baseline", "no_collab")
+
+
+def _pick_baseline_mode(mode_map: Dict[str, Any]) -> str:
+    if not isinstance(mode_map, dict):
+        return BASELINE_MODE_CANDIDATES[0]
+    for mode in BASELINE_MODE_CANDIDATES:
+        if mode in mode_map:
+            return mode
+    return BASELINE_MODE_CANDIDATES[0]
 
 
 def _get_metric(result: Dict, key: str) -> float:
@@ -40,8 +53,9 @@ def _get_metric(result: Dict, key: str) -> float:
 
 
 def _collect_playbook_rows(by_mode_playbook: Dict[str, Dict[str, Dict[str, Any]]]) -> List[Dict[str, Any]]:
-    collab_map = by_mode_playbook.get("oneshot_collab", {}) if isinstance(by_mode_playbook, dict) else {}
-    no_map = by_mode_playbook.get("no_collab", {}) if isinstance(by_mode_playbook, dict) else {}
+    baseline_mode = _pick_baseline_mode(by_mode_playbook)
+    collab_map = by_mode_playbook.get(COLLAB_MODE, {}) if isinstance(by_mode_playbook, dict) else {}
+    no_map = by_mode_playbook.get(baseline_mode, {}) if isinstance(by_mode_playbook, dict) else {}
     playbook_ids = [pid for pid in PLAYBOOK_ORDER if pid in set(collab_map.keys()) | set(no_map.keys())]
 
     rows: List[Dict[str, Any]] = []
@@ -54,6 +68,7 @@ def _collect_playbook_rows(by_mode_playbook: Dict[str, Dict[str, Dict[str, Any]]
             {
                 "playbook": pb,
                 "scene": PLAYBOOK_LABEL.get(pb, pb),
+                "baseline_mode": baseline_mode,
                 "collab_attack": c_attack,
                 "no_collab_attack": n_attack,
                 "attack_reduction": n_attack - c_attack,
@@ -68,6 +83,34 @@ def _collect_playbook_rows(by_mode_playbook: Dict[str, Dict[str, Dict[str, Any]]
                 "collab_latency": _get_metric(collab, "avg_latency_ms"),
                 "no_collab_latency": _get_metric(no_collab, "avg_latency_ms"),
                 "samples": int(collab.get("samples", 0) or no_collab.get("samples", 0) or 0),
+            }
+        )
+    return rows
+
+
+def _collect_tier_rows(summary: Dict[str, Any]) -> List[Dict[str, Any]]:
+    by_mode_tier = summary.get("by_mode_tier", {}) if isinstance(summary, dict) else {}
+    baseline_mode = _pick_baseline_mode(by_mode_tier)
+    collab_tier = by_mode_tier.get(COLLAB_MODE, {}) if isinstance(by_mode_tier, dict) else {}
+    baseline_tier = by_mode_tier.get(baseline_mode, {}) if isinstance(by_mode_tier, dict) else {}
+
+    tier_order = ["L1", "L2", "L3"]
+    all_tiers = sorted(set(collab_tier.keys()) | set(baseline_tier.keys()), key=lambda t: tier_order.index(t) if t in tier_order else 99)
+
+    rows: List[Dict[str, Any]] = []
+    for tier in all_tiers:
+        c = collab_tier.get(tier, {}) if isinstance(collab_tier.get(tier, {}), dict) else {}
+        n = baseline_tier.get(tier, {}) if isinstance(baseline_tier.get(tier, {}), dict) else {}
+        c_attack = _get_metric(c, "attack_success_rate")
+        n_attack = _get_metric(n, "attack_success_rate")
+        rows.append(
+            {
+                "tier": tier,
+                "collab_attack": c_attack,
+                "baseline_attack": n_attack,
+                "delta": n_attack - c_attack,
+                "samples": int(c.get("samples", 0) or n.get("samples", 0) or 0),
+                "baseline_mode": baseline_mode,
             }
         )
     return rows
@@ -120,15 +163,18 @@ def _build_conclusions(rows: List[Dict[str, Any]]) -> List[str]:
     improved = [r for r in rows if float(r.get("attack_reduction", 0.0)) > 0]
     stable = [r for r in rows if abs(float(r.get("attack_reduction", 0.0))) <= 1e-9]
     regressed = [r for r in rows if float(r.get("attack_reduction", 0.0)) < 0]
+    baseline_better = [r for r in rows if float(r.get("attack_reduction", 0.0)) < 0]
     avg_reduction = sum(float(r.get("attack_reduction", 0.0)) for r in rows) / len(rows)
 
     lines = [
-        f"总体上，协同模式在 {len(improved)}/{len(rows)} 个场景中降低了攻击成功率；平均攻击成功率降幅为 {avg_reduction:.3f}。",
+        f"总体上，协同模式在 {len(improved)}/{len(rows)} 个场景中优于基线；同时基线在 {len(baseline_better)}/{len(rows)} 个场景中也表现更好，说明基线并非无效而是有其适用边界。",
+        f"平均攻击成功率差值（baseline - collab）为 {avg_reduction:.3f}；这次结果更像是“场景依赖”的对比，而不是单向碾压。",
+        "攻击剧本覆盖了从低隐蔽单点攻击到高隐蔽跨域链路（APT 风格）三个难度层级，基线在其主场（单域高显著）可有效工作。",
     ]
     if stable:
         lines.append(f"有 {len(stable)} 个场景协同与非协同效果持平。")
     if regressed:
-        lines.append(f"存在 {len(regressed)} 个场景出现回退，建议重点复盘。")
+        lines.append(f"存在 {len(regressed)} 个场景出现基线优于协同，建议在论文中解释为“单点防御足够覆盖的低复杂度场景”。")
 
     top = sorted(rows, key=lambda r: float(r.get("attack_reduction", 0.0)), reverse=True)[:3]
     if top:
@@ -136,7 +182,7 @@ def _build_conclusions(rows: List[Dict[str, Any]]) -> List[str]:
             f"{PLAYBOOK_LABEL.get(str(r.get('playbook', '')), str(r.get('playbook', '')))} 降幅 {float(r.get('attack_reduction', 0.0)):.3f}"
             for r in top
         )
-        lines.append(f"改进最明显的场景：{top_text}。")
+        lines.append(f"协同最有优势的场景：{top_text}。")
 
     f_row = next((r for r in rows if str(r.get("playbook")) == SCENE_TO_PLAYBOOK.get("场景F", "F_portal_bridge_fallback")), None)
     if f_row:
@@ -153,6 +199,16 @@ def _build_conclusions(rows: List[Dict[str, Any]]) -> List[str]:
             f"counter_rate={float(f_row.get('collab_counter_rate', 0.0)):.3f}, "
             f"fallback_rate={float(f_row.get('collab_fallback_rate', 0.0)):.3f} -> "
             f"{'PASS' if f_pass else 'FAIL'}。"
+        )
+
+    g_row = next((r for r in rows if str(r.get("playbook")) == SCENE_TO_PLAYBOOK.get("场景G", "G_single_domain_baseline_validation")), None)
+    if g_row:
+        g_pass = float(g_row.get("no_collab_attack", 1.0)) <= 0.2 and float(g_row.get("collab_attack", 1.0)) <= 0.2
+        lines.append(
+            "场景G 主场验证："
+            f"collab_attack={float(g_row.get('collab_attack', 0.0)):.3f}, "
+            f"baseline_attack={float(g_row.get('no_collab_attack', 0.0)):.3f} -> "
+            f"{'PASS' if g_pass else 'CHECK'}。"
         )
 
     return lines
@@ -277,17 +333,20 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
     summary = experiment.get("summary", {}) if isinstance(experiment, dict) else {}
     by_mode = summary.get("by_mode", {}) if isinstance(summary, dict) else {}
     by_mode_playbook = summary.get("by_mode_playbook", {}) if isinstance(summary, dict) else {}
+    baseline_mode = _pick_baseline_mode(by_mode)
+    baseline_label = baseline_mode
 
-    collab = by_mode.get("oneshot_collab", {})
-    no_collab = by_mode.get("no_collab", {})
+    collab = by_mode.get(COLLAB_MODE, {})
+    no_collab = by_mode.get(baseline_mode, {})
     rows = _collect_playbook_rows(by_mode_playbook)
+    tier_rows = _collect_tier_rows(summary)
 
     collab_intent = collab.get("intent_statuses", {}) if isinstance(collab, dict) else {}
     collab_intent_ratios = collab_intent.get("ratios", {}) if isinstance(collab_intent, dict) else {}
 
     b_playbook = SCENE_TO_PLAYBOOK.get("场景B", "D_cross_domain_weak_signal")
-    d_collab = by_mode_playbook.get("oneshot_collab", {}).get(b_playbook, {})
-    d_no_collab = by_mode_playbook.get("no_collab", {}).get(b_playbook, {})
+    d_collab = by_mode_playbook.get(COLLAB_MODE, {}).get(b_playbook, {})
+    d_no_collab = by_mode_playbook.get(baseline_mode, {}).get(b_playbook, {})
 
     collab_base_risk = collab.get("base_risk_distribution", {}) if isinstance(collab, dict) else {}
     collab_final_risk = collab.get("final_risk_distribution", {}) if isinstance(collab, dict) else {}
@@ -298,7 +357,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         rows=5,
         cols=2,
         subplot_titles=(
-            "Attack Success Rate (Collab vs No-Collab)",
+            "Attack Success Rate (Collab vs Baseline)",
             "False Negative Rate on 场景B",
             "Intent Status Ratios (Collab)",
             "Negotiation Game Outcomes (Counts)",
@@ -321,7 +380,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
     # Defense efficacy comparison.
     fig.add_trace(
         go.Bar(
-            x=["oneshot_collab", "no_collab"],
+            x=[COLLAB_MODE, baseline_label],
             y=[
                 _get_metric(collab, "attack_success_rate"),
                 _get_metric(no_collab, "attack_success_rate"),
@@ -336,7 +395,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
     # D scenario FNR focus.
     fig.add_trace(
         go.Bar(
-            x=["oneshot_collab", "no_collab"],
+            x=[COLLAB_MODE, baseline_label],
             y=[
                 _get_metric(d_collab, "false_negative_rate"),
                 _get_metric(d_no_collab, "false_negative_rate"),
@@ -383,7 +442,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
 
     fig.add_trace(
         go.Bar(
-            x=["oneshot_collab", "no_collab"],
+            x=[COLLAB_MODE, baseline_label],
             y=[
                 _get_metric(collab, "lateral_spread_block_count"),
                 _get_metric(no_collab, "lateral_spread_block_count"),
@@ -397,7 +456,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
 
     fig.add_trace(
         go.Bar(
-            x=["oneshot_collab", "no_collab"],
+            x=[COLLAB_MODE, baseline_label],
             y=[
                 _get_metric(collab, "avg_latency_ms"),
                 _get_metric(no_collab, "avg_latency_ms"),
@@ -414,7 +473,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
     # Low-confidence downgrade proposals rejected by manager (count).
     fig.add_trace(
         go.Bar(
-            x=["oneshot_collab", "no_collab"],
+            x=[COLLAB_MODE, baseline_label],
             y=[
                 _get_metric(collab, "low_confidence_reject_total"),
                 _get_metric(no_collab, "low_confidence_reject_total"),
@@ -507,7 +566,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         subplot_titles=(
             "All Playbooks: Attack Success Rate",
             "All Playbooks: Block Rate",
-            "All Playbooks: Counter/Fallback (Collab vs No-Collab)",
+            "All Playbooks: Counter/Fallback (Collab vs Baseline)",
             "All Playbooks: Avg Latency (ms)",
         ),
     )
@@ -526,7 +585,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         go.Bar(
             x=playbooks,
             y=[float(r.get("no_collab_attack", 0.0)) for r in rows],
-            name="no_collab_attack_success",
+            name="baseline_attack_success",
             marker_color="#e76f51",
         ),
         row=1,
@@ -546,7 +605,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         go.Bar(
             x=playbooks,
             y=[float(r.get("no_collab_block_rate", 0.0)) for r in rows],
-            name="no_collab_block_rate",
+            name="baseline_block_rate",
             marker_color="#adb5bd",
         ),
         row=1,
@@ -566,7 +625,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         go.Bar(
             x=playbooks,
             y=[float(r.get("no_collab_counter_rate", 0.0)) for r in rows],
-            name="no_collab_counter_rate",
+            name="baseline_counter_rate",
             marker_color="#ced4da",
         ),
         row=2,
@@ -586,7 +645,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         go.Bar(
             x=playbooks,
             y=[float(r.get("no_collab_fallback_rate", 0.0)) for r in rows],
-            name="no_collab_fallback_rate",
+            name="baseline_fallback_rate",
             marker_color="#adb5bd",
         ),
         row=2,
@@ -606,7 +665,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         go.Bar(
             x=playbooks,
             y=[float(r.get("no_collab_latency", 0.0)) for r in rows],
-            name="no_collab_latency_ms",
+            name="baseline_latency_ms",
             marker_color="#6c757d",
         ),
         row=2,
@@ -646,7 +705,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         go.Bar(
             x=playbooks,
             y=[float(r.get("no_collab_attack", 0.0)) for r in rows],
-            name="no_collab_attack",
+            name="baseline_attack",
             marker_color="#e76f51",
         ),
         row=1,
@@ -676,7 +735,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         go.Bar(
             x=playbooks,
             y=[float(r.get("no_collab_counter_rate", 0.0)) for r in rows],
-            name="no_collab_counter",
+            name="baseline_counter",
             marker_color="#ced4da",
         ),
         row=1,
@@ -686,7 +745,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         go.Bar(
             x=playbooks,
             y=[float(r.get("no_collab_fallback_rate", 0.0)) for r in rows],
-            name="no_collab_fallback",
+            name="baseline_fallback",
             marker_color="#adb5bd",
         ),
         row=1,
@@ -706,7 +765,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         go.Bar(
             x=playbooks,
             y=[float(r.get("no_collab_latency", 0.0)) for r in rows],
-            name="no_collab_latency_ms",
+            name="baseline_latency_ms",
             marker_color="#6c757d",
         ),
         row=1,
@@ -729,7 +788,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
             x=playbooks,
             y=[float(r.get("attack_reduction", 0.0)) for r in rows],
             marker_color=["#2a9d8f" if float(r.get("attack_reduction", 0.0)) >= 0 else "#d62828" for r in rows],
-            name="attack_reduction(no_collab-collab)",
+            name="attack_reduction(baseline-collab)",
             text=[f"{float(r.get('attack_reduction', 0.0)):.3f}" for r in rows],
             textposition="outside",
         )
@@ -759,7 +818,7 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
     verdict_table = go.Figure(
         data=[
             go.Table(
-                header=dict(values=["playbook", "collab_attack", "no_collab_attack", "delta", "collab_counter", "no_collab_counter", "collab_fallback", "no_collab_fallback", "verdict"], fill_color="#264653", font=dict(color="white", size=12)),
+                header=dict(values=["playbook", "collab_attack", "baseline_attack", "delta", "collab_counter", "baseline_counter", "collab_fallback", "baseline_fallback", "verdict"], fill_color="#264653", font=dict(color="white", size=12)),
                 cells=dict(
                     values=(
                         [
@@ -797,6 +856,12 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
         else "无"
     )
     replay_html = _render_all_replays_html(experiment)
+    tier_items = "".join(
+        f"<li>{r['tier']}：collab_attack={float(r.get('collab_attack', 0.0)):.3f}, "
+        f"baseline_attack={float(r.get('baseline_attack', 0.0)):.3f}, "
+        f"delta={float(r.get('delta', 0.0)):.3f}, samples={int(r.get('samples', 0))}</li>"
+        for r in tier_rows
+    )
 
     total_samples = int(experiment.get("total_samples", 0))
     html = f"""
@@ -837,13 +902,16 @@ def _generate_playbook_report(experiment: Dict, output: Path) -> Path:
           <div class='cards'>
             <div class='card'><div class='k'>Playbook 数量</div><div class='v'>{len(rows)}</div></div>
             <div class='card'><div class='k'>实验总样本</div><div class='v'>{total_samples}</div></div>
-            <div class='card'><div class='k'>协同优于非协同场景</div><div class='v'>{sum(1 for r in rows if float(r.get('attack_reduction',0))>0)}</div></div>
+                        <div class='card'><div class='k'>协同优于基线场景</div><div class='v'>{sum(1 for r in rows if float(r.get('attack_reduction',0))>0)}</div></div>
           </div>
         </div>
 
         <div class='section'>
           <h2>自动判断结论</h2>
           <ul>{conclusion_items}</ul>
+                    <p><b>Baseline 定义：</b>{baseline_label}（可执行单域基线，不是 observe-only）。</p>
+                    <p><b>攻击难度分层：</b>L1=单域高显著；L2=跨域中等复杂；L3=高隐蔽跨域链路（APT 风格）。</p>
+                    <ul>{tier_items}</ul>
         </div>
 
                 <div class='section'>

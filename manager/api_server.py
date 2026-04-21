@@ -146,6 +146,7 @@ def _pick_fallback_action(risk_level: str, reason_code: str) -> str:
 
 class DecisionTriggerRequest(BaseModel):
     enforce_actions: bool = True
+    cross_domain_collab: bool = True
     clear_alerts: bool = True
 
 
@@ -318,6 +319,7 @@ def _build_task_payload(
     alerts: List[Dict[str, Any]],
     strategy: Dict[str, Any],
     enforce_actions: bool,
+    allow_joint_plan: bool,
     incident_id: str,
     plan_type: str = "task_plan",
     negotiation_round: int = 1,
@@ -334,7 +336,7 @@ def _build_task_payload(
     incident_type = strategy.get("incident_type", "none")
     joint_plan = strategy.get("joint_plan", [])
 
-    if enforce_actions and joint_plan:
+    if enforce_actions and allow_joint_plan and joint_plan:
         for step in joint_plan:
             domain = step.get("domain", "unknown")
             objective = step.get("objective", "observe_alert")
@@ -686,6 +688,7 @@ async def decision_trigger(request: DecisionTriggerRequest) -> Dict[str, Any]:
         alerts_snapshot,
         decision,
         enforce_actions=request.enforce_actions,
+        allow_joint_plan=request.cross_domain_collab,
         incident_id=incident_id,
         plan_type="intent_plan",
         negotiation_round=1,
@@ -699,14 +702,23 @@ async def decision_trigger(request: DecisionTriggerRequest) -> Dict[str, Any]:
     incident["ooda_stage"] = "decide" if not request.enforce_actions else "act"
     incident["updated_at"] = _now_iso()
 
-    intent_dispatch = await _dispatch_tasks(intent_payload, message_type=MessageType.PROPOSAL)
-    feedback = _collect_negotiation_feedback(intent_dispatch)
-    consensus_payload = _refine_consensus_payload(
-        intent_payload,
-        feedback,
-        analysis=analysis,
-    )
-    consensus_dispatch = await _dispatch_tasks(consensus_payload, message_type=MessageType.CONSENSUS)
+    if request.cross_domain_collab:
+        intent_dispatch = await _dispatch_tasks(intent_payload, message_type=MessageType.PROPOSAL)
+        feedback = _collect_negotiation_feedback(intent_dispatch)
+        consensus_payload = _refine_consensus_payload(
+            intent_payload,
+            feedback,
+            analysis=analysis,
+        )
+        consensus_dispatch = await _dispatch_tasks(consensus_payload, message_type=MessageType.CONSENSUS)
+        negotiation_mode = "one_shot"
+    else:
+        # 基线模式：保留本地可执行动作，不启用跨域协商改写。
+        intent_dispatch = []
+        feedback = {}
+        consensus_payload = intent_payload
+        consensus_dispatch = await _dispatch_tasks(consensus_payload, message_type=MessageType.TASK)
+        negotiation_mode = "single_domain_baseline"
 
     for dispatch in consensus_dispatch:
         for result in dispatch.get("results", []):
@@ -726,7 +738,7 @@ async def decision_trigger(request: DecisionTriggerRequest) -> Dict[str, Any]:
         "local_constraints": local_constraints,
         "task_payload": consensus_payload.model_dump(),
         "negotiation": {
-            "mode": "one_shot",
+            "mode": negotiation_mode,
             "intent_plan": intent_payload.model_dump(),
             "intent_feedback": feedback,
             "consensus_plan": consensus_payload.model_dump(),
