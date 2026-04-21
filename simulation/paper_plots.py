@@ -283,7 +283,7 @@ def plot_522_asr_by_scene(experiment: Dict[str, Any], output_dir: Path) -> None:
         "F_portal_bridge_fallback",
     ]
     baseline_mode = "single_domain_baseline"
-    
+
     fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(13.0, 5.2))
     width = 0.36
 
@@ -305,18 +305,18 @@ def plot_522_asr_by_scene(experiment: Dict[str, Any], output_dir: Path) -> None:
     _annotate_bars(ax_left, bars_left_1, fmt="{:.1f}%", fontsize=8)
     _annotate_bars(ax_left, bars_left_2, fmt="{:.1f}%", fontsize=8)
 
-    # 右侧图：各场景 业务连续性得分 (BCS) 对比
-    collab_bcs = [_mode_playbook_metric(summary, "oneshot_collab", pid, "business_continuity_score") for pid in attack_scene_ids]
-    no_bcs = [_mode_playbook_metric(summary, baseline_mode, pid, "business_continuity_score") for pid in attack_scene_ids]
+    # 右侧图：各场景 安全-业务均衡得分 (SBCS) 对比
+    collab_sbcs = [_mode_playbook_metric(summary, "oneshot_collab", pid, "security_business_balance_score") for pid in attack_scene_ids]
+    no_sbcs = [_mode_playbook_metric(summary, baseline_mode, pid, "security_business_balance_score") for pid in attack_scene_ids]
 
-    bars_right_1 = ax_right.bar([i - width / 2 for i in x_left], collab_bcs, width, label=_mode_label("oneshot_collab"), color="#2a9d8f")
-    bars_right_2 = ax_right.bar([i + width / 2 for i in x_left], no_bcs, width, label=_mode_label(baseline_mode), color="#f4a261")
+    bars_right_1 = ax_right.bar([i - width / 2 for i in x_left], collab_sbcs, width, label=_mode_label("oneshot_collab"), color="#2a9d8f")
+    bars_right_2 = ax_right.bar([i + width / 2 for i in x_left], no_sbcs, width, label=_mode_label(baseline_mode), color="#f4a261")
 
     ax_right.set_xticks(x_left)
     ax_right.set_xticklabels(labels_left, rotation=15)
-    ax_right.set_ylabel("业务连续性得分 (BCS)")
+    ax_right.set_ylabel("安全-业务均衡得分 (SBCS)")
     ax_right.set_ylim(0, 115)
-    ax_right.set_title("5.2.2 (b) 各场景业务连续性得分 (BCS) 对比")
+    ax_right.set_title("5.2.2 (b) 各场景安全-业务均衡得分 (SBCS) 对比")
     ax_right.legend()
     _annotate_bars(ax_right, bars_right_1, fmt="{:.1f}", fontsize=8)
     _annotate_bars(ax_right, bars_right_2, fmt="{:.1f}", fontsize=8)
@@ -324,70 +324,14 @@ def plot_522_asr_by_scene(experiment: Dict[str, Any], output_dir: Path) -> None:
     # 在 B/C 场景添加高亮连接线或说明
     for i, pid in enumerate(attack_scene_ids):
         if pid in ["B_critical_asset_counter", "C_budget_exhaustion"]:
-            ax_right.annotate("通过反提案/降级\n提升可用性", 
-                             xy=(i, collab_bcs[i]), xytext=(0, 20),
+            ax_right.annotate("通过反提案/降级\n提升安全-业务均衡", 
+                             xy=(i, collab_sbcs[i]), xytext=(0, 20),
                              textcoords="offset points", ha='center',
                              arrowprops=dict(arrowstyle="->", color="green"),
                              fontsize=8, color="green", fontweight="bold")
 
     fig.tight_layout()
-    _save_figure(fig, output_dir, "sec_5_2_2_asr_bcs_by_scene")
-
-        [i - width / 2 for i in x_left],
-        collab_asr,
-        width=width,
-        color="#1f77b4",
-        label=_mode_label("oneshot_collab"),
-    )
-    bars_left_2 = ax_left.bar(
-        [i + width / 2 for i in x_left],
-        no_asr,
-        width=width,
-        color="#ff7f0e",
-        label=_mode_label(baseline_mode),
-    )
-    ax_left.set_xticks(x_left)
-    ax_left.set_xticklabels(labels_left, rotation=18, ha="right")
-    ax_left.set_ylabel("攻击成功率 ASR (%)")
-    ax_left.set_title("攻击场景下的攻击成功率对比")
-    ax_left.set_ylim(0, max(105.0, max(collab_asr + no_asr + [0.0]) * 1.15))
-    _annotate_bars(ax_left, bars_left_1, fmt="{:.1f}%", dy=2)
-    _annotate_bars(ax_left, bars_left_2, fmt="{:.1f}%", dy=2)
-    ax_left.legend(loc="upper left")
-
-    x_right = [0, 1]
-    noise_collab = _percent(_mode_playbook_metric(summary, "oneshot_collab", noise_scene_id, "false_positive_rate"))
-    noise_no = _percent(_mode_playbook_metric(summary, baseline_mode, noise_scene_id, "false_positive_rate"))
-    bars_right = ax_right.bar(
-        x_right,
-        [noise_collab, noise_no],
-        width=0.54,
-        color=["#1f77b4", "#ff7f0e"],
-    )
-    ax_right.set_xticks(x_right)
-    ax_right.set_xticklabels([_mode_label("oneshot_collab"), _mode_label(baseline_mode)])
-    ax_right.set_ylabel("误报率 (%)")
-    ax_right.set_ylim(0, max(100.0, noise_collab, noise_no) * 1.2)
-    ax_right.set_title(f"{SCENE_LABEL_PAPER.get(noise_scene_id, '场景E：噪声抑制')} 的误报率对比")
-    _annotate_bars(ax_right, bars_right, fmt="{:.1f}%", dy=2)
-
-    fig.tight_layout()
-    _save_figure(fig, output_dir, "sec_5_2_2_asr_by_scene")
-    bars_right = ax_right.bar(
-        x_right,
-        [noise_collab, noise_no],
-        width=0.54,
-        color=["#1f77b4", "#ff7f0e"],
-    )
-    ax_right.set_xticks(x_right)
-    ax_right.set_xticklabels([_mode_label("oneshot_collab"), _mode_label(baseline_mode)])
-    ax_right.set_ylabel("误报率 (%)")
-    ax_right.set_ylim(0, max(100.0, noise_collab, noise_no) * 1.2)
-    ax_right.set_title(f"{SCENE_LABEL_PAPER.get(noise_scene_id, '场景D：噪声抑制')} 的误报率对比")
-    _annotate_bars(ax_right, bars_right, fmt="{:.1f}%", dy=2)
-
-    fig.tight_layout()
-    _save_figure(fig, output_dir, "sec_5_2_2_asr_by_scene")
+    _save_figure(fig, output_dir, "sec_5_2_2_asr_sbcs_by_scene")
 
 
 def _extract_mode_stage_counts(samples: List[Dict[str, Any]], mode: str) -> Counter:
@@ -751,7 +695,7 @@ def main() -> None:
     print(f"[paper_plots] source={data_file}")
     print(f"[paper_plots] output_dir={out_dir.resolve()}")
     print("[paper_plots] generated: sec_5_2_1_dual_axis_asr_latency.(pdf|svg)")
-    print("[paper_plots] generated: sec_5_2_2_asr_by_scene.(pdf|svg)")
+    print("[paper_plots] generated: sec_5_2_2_asr_sbcs_by_scene.(pdf|svg)")
     print("[paper_plots] generated: sec_5_2_2_reached_stages_stacked.(pdf|svg)")
     print("[paper_plots] generated: sec_5_3_1_weak_signal_escalation.(pdf|svg)")
     print("[paper_plots] generated: sec_5_3_2_negotiation_distribution.(pdf|svg)")

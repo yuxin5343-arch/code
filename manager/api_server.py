@@ -265,6 +265,148 @@ def _normalize_alert(payload: Dict[str, Any]) -> Dict[str, Any]:
     return payload
 
 
+def _risk_index(risk: str) -> int:
+    return {"low": 0, "medium": 1, "high": 2, "critical": 3}.get(str(risk), 0)
+
+
+def _risk_from_index(idx: int) -> str:
+    safe = max(0, min(3, int(idx)))
+    return ["low", "medium", "high", "critical"][safe]
+
+
+def _build_single_domain_baseline_plan(
+    alerts: List[Dict[str, Any]],
+    local_constraints: Dict[str, Dict[str, Any]],
+    enforce_actions: bool,
+    incident_id: str,
+    plan_type: str = "intent_plan",
+    negotiation_round: int = 1,
+    max_negotiation_rounds: int = 1,
+    negotiation_timeout_ms: int = 3000,
+) -> tuple[Dict[str, Any], Dict[str, Any], TaskPayload]:
+    """基线模式：按域独立分析与决策，禁止跨域融合与联合计划。"""
+    grouped: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for alert in alerts:
+        grouped[str(alert.get("domain") or "unknown")].append(alert)
+
+    all_tasks: List[TaskItem] = []
+    domain_analyses: Dict[str, Dict[str, Any]] = {}
+    per_domain_decisions: Dict[str, Dict[str, Any]] = {}
+
+    for domain in sorted(grouped.keys()):
+        domain_alerts = grouped[domain]
+        local_analysis = _rule_engine.evaluate(domain_alerts)
+        # 显式压制跨域语义，确保 baseline 不获得跨域提权收益。
+        local_analysis["is_cross_domain_attack"] = False
+        local_analysis["involved_domains"] = [domain]
+        local_analysis["domain_weight_calibrated"] = False
+        local_analysis["risk_level"] = str(local_analysis.get("base_risk_level", local_analysis.get("risk_level", "low")))
+        local_analysis["incident_graph"] = {
+            "nodes": [],
+            "edges": [],
+            "summary": {"node_count": len(domain_alerts), "edge_count": 0},
+        }
+        local_analysis["evidence_set"] = []
+
+        domain_constraints = {domain: local_constraints[domain]} if domain in local_constraints else {}
+        local_decision = _decision_tree.choose_strategy(local_analysis, local_constraints=domain_constraints)
+        local_payload = _build_task_payload(
+            domain_alerts,
+            local_decision,
+            enforce_actions=enforce_actions,
+            allow_joint_plan=False,
+            incident_id=incident_id,
+            plan_type=plan_type,
+            negotiation_round=negotiation_round,
+            max_negotiation_rounds=max_negotiation_rounds,
+            negotiation_timeout_ms=negotiation_timeout_ms,
+        )
+
+        all_tasks.extend(local_payload.tasks)
+        domain_analyses[domain] = local_analysis
+        per_domain_decisions[domain] = {
+            "strategy": local_decision.get("strategy", "observe_and_alert"),
+            "priority": int(local_decision.get("priority", 5)),
+            "playbook": local_decision.get("playbook", []),
+            "incident_type": local_decision.get("incident_type", "single_domain_incident"),
+        }
+
+    base_risks = [str(a.get("base_risk_level", "low")) for a in domain_analyses.values()]
+    final_risks = [str(a.get("risk_level", "low")) for a in domain_analyses.values()]
+    max_base_risk = _risk_from_index(max((_risk_index(r) for r in base_risks), default=0))
+    max_final_risk = _risk_from_index(max((_risk_index(r) for r in final_risks), default=0))
+    inferred_stage = "unknown"
+    if domain_analyses:
+        inferred_stage = max(
+            (str(a.get("inferred_stage", "unknown")) for a in domain_analyses.values()),
+            key=lambda stage: _rule_engine.STAGE_ORDER.get(stage, 0),
+        )
+
+    contribution_by_domain: Dict[str, Dict[str, Any]] = {}
+    for domain, analysis in domain_analyses.items():
+        contribution = analysis.get("contribution_by_domain", {})
+        if isinstance(contribution, dict) and domain in contribution and isinstance(contribution[domain], dict):
+            contribution_by_domain[domain] = contribution[domain]
+
+    analysis = {
+        "is_cross_domain_attack": False,
+        "risk_level": max_final_risk,
+        "base_risk_level": max_base_risk,
+        "domain_weight_factor": 0.0,
+        "domain_weight_calibrated": False,
+        "attack_pattern": "single_domain_independent",
+        "incident_type": "single_domain_baseline",
+        "involved_domains": sorted(grouped.keys()),
+        "inferred_stage": inferred_stage,
+        "evidence_set": [],
+        "incident_graph": {
+            "nodes": [],
+            "edges": [],
+            "summary": {"node_count": len(alerts), "edge_count": 0},
+        },
+        "contribution_by_domain": contribution_by_domain,
+        "confidence_global": "medium",
+        "confidence": "medium",
+        "reason": "single_domain_baseline mode: per-domain independent analysis, no cross-domain graph/calibration",
+        "per_domain_analysis": domain_analyses,
+    }
+
+    decision = {
+        "strategy": "per_domain_independent_baseline",
+        "priority": min((int(v.get("priority", 5)) for v in per_domain_decisions.values()), default=5),
+        "playbook": sorted(
+            {
+                action
+                for domain_decision in per_domain_decisions.values()
+                for action in domain_decision.get("playbook", [])
+            }
+        ),
+        "pattern": "single_domain_independent",
+        "incident_type": "single_domain_baseline",
+        "joint_plan": [],
+        "selected_plan": {
+            "plan_id": "single_domain_independent",
+            "strategy": "per_domain_independent_baseline",
+        },
+        "action_plan_candidates": [],
+        "decision_basis": {
+            "risk_level": analysis["risk_level"],
+            "cross_domain": False,
+            "inferred_stage": analysis["inferred_stage"],
+        },
+        "per_domain_decisions": per_domain_decisions,
+    }
+
+    payload = TaskPayload(
+        reasoning="single_domain_baseline: independent per-domain plans",
+        plan_type=plan_type,
+        negotiation_timeout_ms=negotiation_timeout_ms,
+        max_negotiation_rounds=max_negotiation_rounds,
+        tasks=all_tasks,
+    )
+    return analysis, decision, payload
+
+
 def _pick_objective(playbook: List[str], enforce_actions: bool, has_ip: bool) -> str:
     if not enforce_actions:
         return "observe_alert"
@@ -680,21 +822,41 @@ async def decision_trigger(request: DecisionTriggerRequest) -> Dict[str, Any]:
     # 主流程：观察告警 -> 规则分析 -> 决策选策 -> 意图下发 -> 协商收敛 -> 结果回填。
     alerts_snapshot = list(_received_alerts)
     alert_sources = sorted({a.get("alert_source", "unknown") for a in alerts_snapshot})
-    analysis = _rule_engine.evaluate(alerts_snapshot)
     local_constraints = _local_constraints_by_domain()
-    decision = _decision_tree.choose_strategy(analysis, local_constraints=local_constraints)
+    if request.cross_domain_collab:
+        analysis = _rule_engine.evaluate(alerts_snapshot)
+        decision = _decision_tree.choose_strategy(analysis, local_constraints=local_constraints)
+    else:
+        analysis = {}
+        decision = {}
+
     incident_id = _create_incident_context(alerts_snapshot, analysis, decision)
-    intent_payload = _build_task_payload(
-        alerts_snapshot,
-        decision,
-        enforce_actions=request.enforce_actions,
-        allow_joint_plan=request.cross_domain_collab,
-        incident_id=incident_id,
-        plan_type="intent_plan",
-        negotiation_round=1,
-        max_negotiation_rounds=1,
-        negotiation_timeout_ms=3000,
-    )
+    if request.cross_domain_collab:
+        intent_payload = _build_task_payload(
+            alerts_snapshot,
+            decision,
+            enforce_actions=request.enforce_actions,
+            allow_joint_plan=request.cross_domain_collab,
+            incident_id=incident_id,
+            plan_type="intent_plan",
+            negotiation_round=1,
+            max_negotiation_rounds=1,
+            negotiation_timeout_ms=3000,
+        )
+    else:
+        analysis, decision, intent_payload = _build_single_domain_baseline_plan(
+            alerts=alerts_snapshot,
+            local_constraints=local_constraints,
+            enforce_actions=request.enforce_actions,
+            incident_id=incident_id,
+            plan_type="intent_plan",
+            negotiation_round=1,
+            max_negotiation_rounds=1,
+            negotiation_timeout_ms=3000,
+        )
+        incident = _ensure_incident(incident_id)
+        incident["analysis"] = analysis
+        incident["decision"] = decision
 
     incident = _ensure_incident(incident_id)
     incident["tasks_total"] = len(intent_payload.tasks)
