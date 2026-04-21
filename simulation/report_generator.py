@@ -14,22 +14,20 @@ import plotly.graph_objects as go
 
 PLAYBOOK_ORDER = [
     "A_happy_path",
-    "D_cross_domain_weak_signal",
     "B_critical_asset_counter",
-    "E_false_positive_noise",
     "C_budget_exhaustion",
+    "D_cross_domain_weak_signal",
+    "E_false_positive_noise",
     "F_portal_bridge_fallback",
-    "G_single_domain_baseline_validation",
 ]
 
 PLAYBOOK_LABEL = {
     "A_happy_path": "场景A",
-    "D_cross_domain_weak_signal": "场景B",
-    "B_critical_asset_counter": "场景C",
-    "E_false_positive_noise": "场景D",
-    "C_budget_exhaustion": "场景E",
+    "B_critical_asset_counter": "场景B",
+    "C_budget_exhaustion": "场景C",
+    "D_cross_domain_weak_signal": "场景D",
+    "E_false_positive_noise": "场景E",
     "F_portal_bridge_fallback": "场景F",
-    "G_single_domain_baseline_validation": "场景G",
 }
 
 SCENE_TO_PLAYBOOK = {v: k for k, v in PLAYBOOK_LABEL.items()}
@@ -72,6 +70,8 @@ def _collect_playbook_rows(by_mode_playbook: Dict[str, Dict[str, Dict[str, Any]]
                 "collab_attack": c_attack,
                 "no_collab_attack": n_attack,
                 "attack_reduction": n_attack - c_attack,
+                "collab_sbcs": _get_metric(collab, "security_business_balance_score"),
+                "no_collab_sbcs": _get_metric(no_collab, "security_business_balance_score"),
                 "collab_block_rate": _get_metric(collab, "block_rate"),
                 "no_collab_block_rate": _get_metric(no_collab, "block_rate"),
                 "collab_counter_rate": _get_metric(collab, "counter_rate"),

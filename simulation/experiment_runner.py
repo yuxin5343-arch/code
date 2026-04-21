@@ -427,13 +427,23 @@ async def run_playbook_once(
         "consensus_objectives": consensus_objectives,
         "false_negative": 1 if attack_metrics.get("attack_success", True) else 0,
         "weak_signal_missed_detection": weak_signal_missed_detection,
-        **task_metrics,
-        **attack_metrics,
-        **detect_metrics,
-        "flat_results": flat_results,
     }
+
+    # Security-Business Balance Score (SBCS) logic
+    # Direct Damage: attack_success impacts 60%
+    # Defense Cost: disruptive defense (no counter/fallback) impacts 40%
+    # Higher score is better.
+    attack_success = float(attack_metrics.get("attack_success_rate", 1.0))
+    # If it's SUCCESS and NOT a negotiated version, it's a "hard" disruption
+    is_disruptive_defense = bool(task_metrics.get("success", False)) and not (counter_triggered or (fallback_task_count > 0))
+    defense_impact = 1.0 if is_disruptive_defense else 0.0
+    
+    # Calculate SBCS (0-100)
+    sbcs = max(0, 1.0 - (attack_success * 0.6 + defense_impact * 0.4)) * 100.0
+    result["security_business_balance_score"] = round(sbcs, 2)
+
     result["block_rate"] = round(1 - float(result.get("attack_success_rate", 1.0)), 3)
-    return result
+    return {**result, **task_metrics, **attack_metrics, **detect_metrics, "flat_results": flat_results}
 
 
 def aggregate_runs(samples: List[Dict]) -> Dict:
@@ -544,6 +554,7 @@ def aggregate_runs(samples: List[Dict]) -> Dict:
         "task_success_rate": round(total_success / total_tasks, 3) if total_tasks else 0.0,
         "attack_success_rate": round(mean(float(s.get("attack_success_rate", 1.0)) for s in samples), 3),
         "block_rate": round(mean(float(s.get("block_rate", 0.0)) for s in samples), 3),
+        "security_business_balance_score": round(mean(float(s.get("security_business_balance_score", 0.0)) for s in samples), 2),
         "false_positive_rate": round(mean(float(s.get("false_positive_rate", 0.0)) for s in samples), 3),
         "false_negative_rate": round(mean(float(s.get("false_negative_rate", 0.0)) for s in samples), 3),
         "avg_latency_ms": int(mean(int(s.get("avg_latency_ms", 0)) for s in samples)),

@@ -93,11 +93,38 @@ chmod 775 results
 
 ### Playbook 场景
 
-当前为 7 个核心场景，双模式对照：
+当前为 6 个核心场景，双模式对照：
 - 模式 1：oneshot_collab（一轮协同）
-- 模式 2：single_domain_baseline（可执行单域基线，不启用跨域协同改写）
+- 模式 2：single_domain_baseline（可执行单域基线，不启用跨域协同）
 
 场景定义：
+- **场景A：无分歧协同 (Happy Path)** - 常规跨域攻击，信号显著。
+- **场景B：关键资产约束 (Asset Constraint)** - 执行器因业务连续性拒绝激进指令，触发反提案协商。
+- **场景C：资源受限 (Resource Constraint)** - 执行器预算/性能不足，触发降级防御（Fallback）。
+- **场景D：弱信号提权 (Weak Signal)** - 单域告警不充分，需跨域关联校准风险等级。
+- **场景E：噪声抑制 (Noise Suppression)** - 验证在误报干扰下，协同决策的精确度。
+- **场景F：跨域补偿 (Cross-domain Fallback)** - 当 A 域无法执行拦截时，由 B 域在源头或中继点补偿执行。
+
+## 论文绘图工具
+
+本项目提供 `simulation/paper_plots.py` 脚本，用于生成符合学术论文规范的矢量图（PDF/SVG）。
+
+### 运行方式
+
+```bash
+# 在 Docker 容器外（需安装 matplotlib/seaborn）或在 experiment 容器内运行
+python simulation/paper_plots.py
+```
+
+### 生成图表说明
+
+1. **sec_5_2_1_dual_axis_asr_latency**: 整体攻击成功率（ASR）与决策/拦截时延对比。
+2. **sec_5_2_2_asr_by_scene**: 各分类场景下的 ASR 对比及误报率指标。
+3. **sec_5_2_2_reached_stages_stacked**: 攻击最终到达阶段的分布统计（堆叠百分比图）。
+4. **sec_5_3_1_weak_signal_escalation**: 弱信号场景下风险等级校准前后的评估统计。
+5. **sec_5_3_2_negotiation_distribution**: 反提案触发率与采纳率统计。
+6. **sec_5_3_3_fallback_path**: 替代路径调度次数与触发率。
+
 - A_happy_path：无分歧协同，验证闭环时延与阻断效果。
 - D_cross_domain_weak_signal：Portal -> Office -> Core 三节点微弱信号叠加提权，验证防御前置。
 - B_critical_asset_counter：关键资产触发反提案（如 degrade_traffic）。
